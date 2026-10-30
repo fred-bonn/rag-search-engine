@@ -4,6 +4,9 @@ import string as string
 DEFAULT_SEARCH_LIMIT = 5
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
+    if limit <= 0:
+        return []
+
     query = process(query)
     query_tokens = tokenize(query)
     movies = load_movies()
