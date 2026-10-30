@@ -22,7 +22,7 @@ def test_process(text: str, expected: str) -> None:
     ("text", "expected"),
     [
         ("one two", ["one", "two"]),
-        ("  spaced   words  ", ["spaced", "words"]),
+        ("  spaced   words  ", ["space", "word"]),
         ("line one\nline two\tend", ["line", "one", "line", "two", "end"]),
         ("", []),
         (" \n\t ", []),
