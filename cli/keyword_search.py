@@ -4,9 +4,24 @@ import string as string
 
 DEFAULT_SEARCH_LIMIT = 5
 
+def process(text: str) -> str:
+    text = text.lower()
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    return text.lower()
+
+def tokenize(text: str) -> list[str]:
+    return text.split()
+
+def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
+    return any(
+        query_token in title_token
+        for query_token in query_tokens
+        for title_token in title_tokens
+    )
+
 def load_stopwords() -> list[str]:
     with DATA_PATH_STOPWORDS.open("r") as f:
-        stopwords = [line.strip() for line in f]
+        stopwords = [process(line) for line in f]
     return stopwords
 
 
@@ -32,18 +47,3 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]
                 break
 
     return results
-
-def process(text: str) -> str:
-    text = text.lower()
-    text = text.translate(str.maketrans("", "", string.punctuation))
-    return text.lower()
-
-def tokenize(text: str) -> list[str]:
-    return text.split()
-
-def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
-    return any(
-        query_token in title_token
-        for query_token in query_tokens
-        for title_token in title_tokens
-    )
