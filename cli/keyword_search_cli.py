@@ -18,7 +18,7 @@ def main() -> None:
             print(f"Searching for: {args.query}")
             results = search_command(args.query)
             for i, movie in enumerate(results):
-                print(f"{i}: {movie['title']}")
+                print(f"{i+1}: {movie['title']}")
         case _:
             parser.print_help()
 

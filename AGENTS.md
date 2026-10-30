@@ -2,3 +2,4 @@
 - Use conventional commit-style messages: type(scope): summary
 - Valid types are: feat, fix, docs, chore, refactor, and test
 - Scope is optional; use the affected package or area when helpful
+- Before making commits, make sure all tests are passing.
