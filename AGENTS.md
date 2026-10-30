@@ -1,5 +1,4 @@
-You only do commit and nothing else
-
+- Do not commit unless I tell you to.
 - Use conventional commit-style messages: type(scope): summary
 - Valid types are: feat, fix, docs, chore, refactor, and test
 - Scope is optional; use the affected package or area when helpful
