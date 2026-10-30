@@ -1,5 +1,8 @@
-import argparse
+import argparse, json
 
+from search_utils import load_data, title_match
+
+DATA_FILE_PATH = "data/movies.json"
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
@@ -13,10 +16,16 @@ def main() -> None:
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
-            pass
+            movies = load_data()
+            count = 0
+            for movie in movies.values():
+                if title_match(movie, args.query):
+                    print(f"{movie['id']}: {movie['title']}")
+                    count += 1
+                if count == 5:
+                    break
         case _:
             parser.print_help()
-
 
 if __name__ == "__main__":
     main()
