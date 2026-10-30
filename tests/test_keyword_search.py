@@ -6,7 +6,12 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "cli"))
 
-from keyword_search import has_matching_token, process, search_command, tokenize
+from keyword_search import (
+    has_matching_token,
+    process,
+    search_command,
+    tokenize,
+)
 
 
 class KeywordSearchHelperTests(unittest.TestCase):

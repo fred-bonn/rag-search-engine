@@ -5,7 +5,7 @@ from typing import TypedDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "movies.json"
-TEST_DATA_PATH = PROJECT_ROOT / "test" / "movies.json"
+TEST_DATA_PATH = PROJECT_ROOT / "tests" / "movies.json"
 
 class Movie(TypedDict):
     id: int
