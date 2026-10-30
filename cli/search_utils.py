@@ -12,9 +12,6 @@ class Movie(TypedDict):
     title: str
     description: str
 
-def title_match(movie: Movie, query: str) -> bool:
-    return query.lower() in movie["title"].lower()
-
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:
         raw_data = json.load(f)["movies"]
