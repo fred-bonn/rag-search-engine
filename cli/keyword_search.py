@@ -1,34 +1,31 @@
-from search_utils import load_movies, load_stopwords, Movie
+from search_utils import load_movies, DATA_PATH_STOPWORDS, Movie
 import string as string
+
 
 DEFAULT_SEARCH_LIMIT = 5
 
-class SearchContext:
-    instance = None
-    stopwords: list[str]
+def load_stopwords() -> list[str]:
+    with DATA_PATH_STOPWORDS.open("r") as f:
+        stopwords = [line.strip() for line in f]
+    return stopwords
 
-    def __new__(cls):
-        if cls.instance is None:
-            cls.instance = super().__new__(cls)
-            cls.instance.stopwords = [process(word) for word in load_stopwords()]
-        return cls.instance
+
+STOPWORDS = load_stopwords()
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
     if limit <= 0:
         return []
 
-    search_context = SearchContext()
-
     query = process(query)
-    query_tokens = [token for token in tokenize(process(query)) if token not in search_context.stopwords]
+    query_tokens = [token for token in tokenize(process(query)) if token not in STOPWORDS]
     for token in query_tokens:
-        if token in search_context.stopwords:
+        if token in STOPWORDS:
             query_tokens.remove(token)
 
     movies = load_movies()
     results: list[Movie] = []
     for movie in movies.values():
-        title_tokens = [token for token in tokenize(process(movie["title"])) if token not in search_context.stopwords]
+        title_tokens = [token for token in tokenize(process(movie["title"])) if token not in STOPWORDS]
         if has_matching_token(query_tokens, title_tokens):
             results.append(movie)
             if len(results) == limit:

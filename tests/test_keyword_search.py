@@ -77,8 +77,7 @@ def test_search_command(
         6: {"id": 6, "title": "Theater Six", "description": ""},
     }
     monkeypatch.setattr(keyword_search, "load_movies", lambda: movies)
-    monkeypatch.setattr(keyword_search, "load_stopwords", lambda: [])
-    monkeypatch.setattr(keyword_search.SearchContext, "instance", None)
+    monkeypatch.setattr(keyword_search, "STOPWORDS", [])
 
     if limit is None:
         results = keyword_search.search_command(query)

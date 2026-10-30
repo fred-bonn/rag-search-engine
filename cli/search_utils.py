@@ -24,8 +24,3 @@ def load_movies() -> dict[int, Movie]:
             for m in raw_data
         }
     return movies
-
-def load_stopwords() -> list[str]:
-    with DATA_PATH_STOPWORDS.open("r") as f:
-        stopwords = [line.strip() for line in f]
-    return stopwords
