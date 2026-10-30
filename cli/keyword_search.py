@@ -17,8 +17,7 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]
 
     return results
 
-def process(input: str) -> str:
-    input = input.lower()
-    translator = str.maketrans("", "", string.punctuation)
-    input = input.translate(translator)
-    return input.lower()
+def process(text: str) -> str:
+    text = text.lower()
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    return text.lower()
