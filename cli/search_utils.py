@@ -4,17 +4,16 @@ from typing import TypedDict
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_PATH = PROJECT_ROOT / "data" / "movies.json"
-TEST_DATA_PATH = PROJECT_ROOT / "tests" / "movies.json"
+DATA_PATH_MOVIES = PROJECT_ROOT / "data" / "movies.json"
+DATA_PATH_STOPWORDS = PROJECT_ROOT / "data" / "stopwords.txt"
 
 class Movie(TypedDict):
     id: int
     title: str
     description: str
 
-def load_movies(testing: bool = False) -> dict[int, Movie]:
-    data_path = TEST_DATA_PATH if testing else DATA_PATH
-    with data_path.open("r") as f:
+def load_movies() -> dict[int, Movie]:
+    with DATA_PATH_MOVIES.open("r") as f:
         raw_data = json.load(f)["movies"]
         movies = {
             int(m["id"]): Movie(
@@ -25,3 +24,8 @@ def load_movies(testing: bool = False) -> dict[int, Movie]:
             for m in raw_data
         }
     return movies
+
+def load_stopwords() -> list[str]:
+    with DATA_PATH_STOPWORDS.open("r") as f:
+        stopwords = [line.strip() for line in f]
+    return stopwords

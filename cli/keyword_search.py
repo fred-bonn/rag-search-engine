@@ -1,19 +1,34 @@
-from search_utils import load_movies, Movie
+from search_utils import load_movies, load_stopwords, Movie
 import string as string
 
 DEFAULT_SEARCH_LIMIT = 5
+
+class SearchContext:
+    instance = None
+    stopwords: list[str]
+
+    def __new__(cls):
+        if cls.instance is None:
+            cls.instance = super().__new__(cls)
+            cls.instance.stopwords = [process(word) for word in load_stopwords()]
+        return cls.instance
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
     if limit <= 0:
         return []
 
-    query = process(query)
-    query_tokens = tokenize(query)
-    movies = load_movies()
+    search_context = SearchContext()
 
+    query = process(query)
+    query_tokens = [token for token in tokenize(process(query)) if token not in search_context.stopwords]
+    for token in query_tokens:
+        if token in search_context.stopwords:
+            query_tokens.remove(token)
+
+    movies = load_movies()
     results: list[Movie] = []
     for movie in movies.values():
-        title_tokens = tokenize(process(movie["title"]))
+        title_tokens = [token for token in tokenize(process(movie["title"])) if token not in search_context.stopwords]
         if has_matching_token(query_tokens, title_tokens):
             results.append(movie)
             if len(results) == limit:
