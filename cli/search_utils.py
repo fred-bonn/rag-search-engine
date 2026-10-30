@@ -1,8 +1,10 @@
 import json
+from pathlib import Path
 from typing import TypedDict
 
 
-DATA_FILE_PATH = "data/movies.json"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_PATH = PROJECT_ROOT / "data" / "movies.json"
 
 
 class Movie(TypedDict):
@@ -10,12 +12,11 @@ class Movie(TypedDict):
     title: str
     description: str
 
-
 def title_match(movie: Movie, query: str) -> bool:
     return query.lower() in movie["title"].lower()
 
-def load_data() -> dict[int, Movie]:
-    with open(DATA_FILE_PATH, "r") as f:
+def load_movies() -> dict[int, Movie]:
+    with DATA_PATH.open("r") as f:
         raw_data = json.load(f)["movies"]
         movies = {
             int(m["id"]): Movie(
