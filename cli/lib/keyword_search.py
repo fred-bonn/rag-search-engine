@@ -116,6 +116,11 @@ def idf_command(term: str) -> float:
     term_match_doc_count = len(index.get_documents(term_token))
     return math.log((total_doc_count + 1) / (term_match_doc_count+1))
 
+def tf_idf_command(doc_id: int, term: str) -> float:
+    tf = tf_command(doc_id, term)
+    idf = idf_command(term)
+    return tf * idf
+
 def process(text: str) -> str:
     text = text.lower()
     text = text.translate(str.maketrans("", "", string.punctuation))
