@@ -32,6 +32,7 @@ def main() -> None:
         case "build":
             print(f"Building the inverted index...")
             build_command()
+            print("Inverted index built successfully.")
         case _:
             parser.print_help()
 

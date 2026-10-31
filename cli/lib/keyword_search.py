@@ -1,24 +1,14 @@
-import string, pickle
+import pickle, string
 from nltk.stem import PorterStemmer
-from pathlib import Path
 
-from .search_utils import load_movies, DATA_PATH_STOPWORDS, PROJECT_ROOT, Movie
+from .search_utils import (
+    CACHE_DIR,
+    STOPWORDS_PATH,
+    DEFAULT_SEARCH_LIMIT,
+    Movie,
+    load_movies
+)
 
-
-DEFAULT_SEARCH_LIMIT = 5
-stemmer = PorterStemmer()
-
-def process(text: str) -> str:
-    text = text.lower()
-    text = text.translate(str.maketrans("", "", string.punctuation))
-    return text.lower()
-
-def load_stopwords() -> list[str]:
-    with DATA_PATH_STOPWORDS.open("r") as f:
-        stopwords = [process(line) for line in f]
-    return stopwords
-
-STOPWORDS = load_stopwords()
 
 class InvertedIndex:
     def __init__(self):
@@ -42,11 +32,10 @@ class InvertedIndex:
             self.__add_document(doc_id, f"{movie["title"]} {movie["description"]}")
 
     def save(self) -> None:
-        cache_dir = PROJECT_ROOT / "cache"
-        cache_dir.mkdir(exist_ok=True)
+        CACHE_DIR.mkdir(exist_ok=True)
 
-        index_path = cache_dir / "index.pkl"
-        docmap_path = cache_dir / "docmap.pkl"
+        index_path = CACHE_DIR / "index.pkl"
+        docmap_path = CACHE_DIR / "docmap.pkl"
 
         with index_path.open("wb") as f:
             pickle.dump(self.index, f)
@@ -54,9 +43,8 @@ class InvertedIndex:
             pickle.dump(self.docmap, f)
 
     def load(self) -> None:
-        cache_dir = PROJECT_ROOT / "cache"
-        index_path = cache_dir / "index.pkl"
-        docmap_path = cache_dir / "docmap.pkl"
+        index_path = CACHE_DIR / "index.pkl"
+        docmap_path = CACHE_DIR / "docmap.pkl"
 
         if not index_path.exists() or not docmap_path.exists():
             raise FileNotFoundError("Cache files not found.")
@@ -72,18 +60,6 @@ def build_command() -> None:
     index = InvertedIndex()
     index.build()
     index.save()
-
-
-def tokenize(text: str) -> list[str]:
-    text = process(text)
-    return [stemmer.stem(token) for token in text.split() if token not in STOPWORDS]
-
-def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
-    return any(
-        query_token in title_token
-        for query_token in query_tokens
-        for title_token in title_tokens
-    )
 
 def search_command(query: str, index: InvertedIndex, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
     if limit <= 0:
@@ -104,3 +80,20 @@ def search_command(query: str, index: InvertedIndex, limit: int = DEFAULT_SEARCH
                     break
 
     return results
+
+def process(text: str) -> str:
+    text = text.lower()
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    return text.lower()
+
+def load_stopwords() -> list[str]:
+    with STOPWORDS_PATH.open("r") as f:
+        stopwords = [process(line) for line in f]
+    return stopwords
+
+STOPWORDS = load_stopwords()
+
+def tokenize(text: str) -> list[str]:
+    text = process(text)
+    stemmer = PorterStemmer()
+    return [stemmer.stem(token) for token in text.split() if token not in STOPWORDS]

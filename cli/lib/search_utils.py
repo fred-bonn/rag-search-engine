@@ -4,8 +4,11 @@ from typing import TypedDict
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_PATH_MOVIES = PROJECT_ROOT / "data" / "movies.json"
-DATA_PATH_STOPWORDS = PROJECT_ROOT / "data" / "stopwords.txt"
+DATA_PATH = PROJECT_ROOT / "data" / "movies.json"
+STOPWORDS_PATH = PROJECT_ROOT / "data" / "stopwords.txt"
+CACHE_DIR = PROJECT_ROOT / "cache"
+
+DEFAULT_SEARCH_LIMIT = 5
 
 class Movie(TypedDict):
     id: int
@@ -13,7 +16,7 @@ class Movie(TypedDict):
     description: str
 
 def load_movies() -> dict[int, Movie]:
-    with DATA_PATH_MOVIES.open("r") as f:
+    with DATA_PATH.open("r") as f:
         raw_data = json.load(f)["movies"]
         movies = {
             int(m["id"]): Movie(
