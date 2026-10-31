@@ -53,11 +53,25 @@ class InvertedIndex:
         with docmap_path.open("wb") as f:
             pickle.dump(self.docmap, f)
 
+    def load(self) -> None:
+        cache_dir = PROJECT_ROOT / "cache"
+        index_path = cache_dir / "index.pkl"
+        docmap_path = cache_dir / "docmap.pkl"
+
+        if not index_path.exists() or not docmap_path.exists():
+            raise FileNotFoundError("Cache files not found.")
+
+        with index_path.open("rb") as f:
+            self.index = pickle.load(f)
+        with docmap_path.open("rb") as f:
+            self.docmap = pickle.load(f)
+
+        return
+
 def build_command() -> None:
     index = InvertedIndex()
     index.build()
     index.save()
-    print(f"First document for token 'merida': = {index.get_documents('merida')}")
 
 
 def tokenize(text: str) -> list[str]:
@@ -71,7 +85,7 @@ def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool
         for title_token in title_tokens
     )
 
-def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
+def search_command(query: str, index: InvertedIndex, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
     if limit <= 0:
         return []
 
@@ -80,13 +94,13 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]
         if token in STOPWORDS:
             query_tokens.remove(token)
 
-    movies = load_movies()
     results: list[Movie] = []
-    for movie in movies.values():
-        title_tokens = [token for token in tokenize(movie["title"])]
-        if has_matching_token(query_tokens, title_tokens):
-            results.append(movie)
-            if len(results) == limit:
-                break
+    for token in query_tokens:
+        for doc_id in index.get_documents(token):
+            movie = index.docmap[doc_id]
+            if movie not in results:
+                results.append(movie)
+                if len(results) == limit:
+                    break
 
     return results
