@@ -71,6 +71,16 @@ class InvertedIndex:
     def get_term_frequency(self, doc_id: int, term: str) -> int:
         return self.term_frequencies.get(doc_id, Counter()).get(term, 0)
 
+    def get_inverse_document_frequency(self, term: str) -> float:
+        total_doc_count = len(self.docmap)
+        term_match_doc_count = len(self.get_documents(term))
+        return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
+
+    def get_tf_idf(self, doc_id: int, term: str) -> float:
+        tf = self.get_term_frequency(doc_id, term)
+        idf = self.get_inverse_document_frequency(term)
+        return tf * idf
+
 def build_command() -> None:
     index = InvertedIndex()
     index.build()
@@ -103,23 +113,19 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]
     return results
 
 def tf_command(doc_id: int, term: str) -> int:
-    term_token = tokenize_term(term)
     index = InvertedIndex()
     index.load()
-    return index.get_term_frequency(doc_id, term_token)
+    return index.get_term_frequency(doc_id, tokenize_term(term))
 
 def idf_command(term: str) -> float:
-    term_token = tokenize_term(term)
     index = InvertedIndex()
     index.load()
-    total_doc_count = len(index.docmap)
-    term_match_doc_count = len(index.get_documents(term_token))
-    return math.log((total_doc_count + 1) / (term_match_doc_count+1))
+    return index.get_inverse_document_frequency(tokenize_term(term))
 
 def tf_idf_command(doc_id: int, term: str) -> float:
-    tf = tf_command(doc_id, term)
-    idf = idf_command(term)
-    return tf * idf
+    index = InvertedIndex()
+    index.load()
+    return index.get_tf_idf(doc_id, tokenize_term(term))
 
 def process(text: str) -> str:
     text = text.lower()
