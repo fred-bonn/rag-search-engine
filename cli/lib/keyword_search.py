@@ -61,7 +61,10 @@ def build_command() -> None:
     index.build()
     index.save()
 
-def search_command(query: str, index: InvertedIndex, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
+def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
+    index = InvertedIndex()
+    index.load()
+
     if limit <= 0:
         return []
 
@@ -70,14 +73,17 @@ def search_command(query: str, index: InvertedIndex, limit: int = DEFAULT_SEARCH
         if token in STOPWORDS:
             query_tokens.remove(token)
 
+    seen: set[int] = set()
     results: list[Movie] = []
     for token in query_tokens:
         for doc_id in index.get_documents(token):
-            movie = index.docmap[doc_id]
-            if movie not in results:
-                results.append(movie)
-                if len(results) == limit:
-                    break
+            if doc_id in seen:
+                continue
+            seen.add(doc_id)
+            doc = index.docmap[doc_id]
+            results.append(doc)
+            if len(results) >= limit:
+                return results
 
     return results
 

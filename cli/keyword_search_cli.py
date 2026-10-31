@@ -1,7 +1,10 @@
 import argparse
 
+from lib.keyword_search import (
+    search_command,
+    build_command,
+)
 
-from lib.keyword_search import search_command, build_command, InvertedIndex
 
 DATA_FILE_PATH = "data/movies.json"
 
@@ -16,17 +19,14 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    index = InvertedIndex()
-
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
             try:
-                index.load()
+                results = search_command(args.query)
             except FileNotFoundError:
                 print("Cache not found. Please build the index first.")
                 return
-            results = search_command(args.query, index)
             for i, movie in enumerate(results):
                 print(f"{i+1}: {movie['title']}")
         case "build":
