@@ -3,10 +3,9 @@ import argparse
 from lib.keyword_search import (
     search_command,
     build_command,
+    tf_command,
 )
 
-
-DATA_FILE_PATH = "data/movies.json"
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
@@ -17,9 +16,17 @@ def main() -> None:
 
     subparsers.add_parser("build", help="Build the inverted index")
 
+    tf_parser = subparsers.add_parser("tf", help="Get term frequency for a document ID and term")
+    tf_parser.add_argument("doc_id", type=int, help="Document ID")
+    tf_parser.add_argument("term", type=str, help="Term")
+
     args = parser.parse_args()
 
     match args.command:
+        case "build":
+            print(f"Building the inverted index...")
+            build_command()
+            print("Inverted index built successfully.")
         case "search":
             print(f"Searching for: {args.query}")
             try:
@@ -29,10 +36,13 @@ def main() -> None:
                 return
             for i, movie in enumerate(results):
                 print(f"{i+1}: {movie['title']}")
-        case "build":
-            print(f"Building the inverted index...")
-            build_command()
-            print("Inverted index built successfully.")
+        case "tf":
+            try:
+                tf = tf_command(args.doc_id, args.term)
+            except FileNotFoundError:
+                print("Cache not found. Please build the index first.")
+                return
+            print(f"Term frequency for '{args.term}' in document {args.doc_id}: {tf}")
         case _:
             parser.print_help()
 

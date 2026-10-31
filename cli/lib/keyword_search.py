@@ -1,4 +1,5 @@
 import pickle, string
+from collections import Counter
 from nltk.stem import PorterStemmer
 
 from .search_utils import (
@@ -14,6 +15,7 @@ class InvertedIndex:
     def __init__(self):
         self.index: dict[str, set[int]] = {}
         self.docmap: dict[int, Movie] = {}
+        self.term_frequencies: dict[int, Counter] = {}
 
     def __add_document(self, doc_id: int, text: str) -> None:
         tokens = tokenize(text)
@@ -21,6 +23,10 @@ class InvertedIndex:
             if token not in self.index:
                 self.index[token] = set()
             self.index[token].add(doc_id)
+
+            if doc_id not in self.term_frequencies:
+                self.term_frequencies[doc_id] = Counter()
+            self.term_frequencies[doc_id][token] += 1
 
     def get_documents(self, term: str) -> list[int]:
         return sorted(self.index.get(term, []))
@@ -36,25 +42,34 @@ class InvertedIndex:
 
         index_path = CACHE_DIR / "index.pkl"
         docmap_path = CACHE_DIR / "docmap.pkl"
+        term_frequencies_path = CACHE_DIR / "term_frequencies.pkl"
 
         with index_path.open("wb") as f:
             pickle.dump(self.index, f)
         with docmap_path.open("wb") as f:
             pickle.dump(self.docmap, f)
+        with term_frequencies_path.open("wb") as f:
+            pickle.dump(self.term_frequencies, f)
 
     def load(self) -> None:
         index_path = CACHE_DIR / "index.pkl"
         docmap_path = CACHE_DIR / "docmap.pkl"
+        term_frequencies_path = CACHE_DIR / "term_frequencies.pkl"
 
-        if not index_path.exists() or not docmap_path.exists():
+        if not index_path.exists() or not docmap_path.exists() or not term_frequencies_path.exists():
             raise FileNotFoundError("Cache files not found.")
 
         with index_path.open("rb") as f:
             self.index = pickle.load(f)
         with docmap_path.open("rb") as f:
             self.docmap = pickle.load(f)
+        with term_frequencies_path.open("rb") as f:
+            self.term_frequencies = pickle.load(f)
 
         return
+
+    def get_term_frequency(self, doc_id: int, term: str) -> int:
+        return self.term_frequencies.get(doc_id, Counter()).get(term, 0)
 
 def build_command() -> None:
     index = InvertedIndex()
@@ -87,6 +102,12 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]
 
     return results
 
+def tf_command(doc_id: int, term: str) -> int:
+    index = InvertedIndex()
+    index.load()
+    term_token = tokenize_term(term)
+    return index.get_term_frequency(doc_id, term_token)
+
 def process(text: str) -> str:
     text = text.lower()
     text = text.translate(str.maketrans("", "", string.punctuation))
@@ -103,3 +124,9 @@ def tokenize(text: str) -> list[str]:
     text = process(text)
     stemmer = PorterStemmer()
     return [stemmer.stem(token) for token in text.split() if token not in STOPWORDS]
+
+def tokenize_term(term: str) -> str:
+    tokens = tokenize(term)
+    if len(tokens) != 1:
+        raise ValueError("Term must tokenize to exactly one token.")
+    return tokens[0]
