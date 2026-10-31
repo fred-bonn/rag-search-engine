@@ -4,6 +4,7 @@ from lib.keyword_search import (
     search_command,
     build_command,
     tf_command,
+    idf_command,
 )
 
 
@@ -20,31 +21,32 @@ def main() -> None:
     tf_parser.add_argument("doc_id", type=int, help="Document ID")
     tf_parser.add_argument("term", type=str, help="Term")
 
+    idf_parser = subparsers.add_parser("idf", help="Get inverse document frequency for a term")
+    idf_parser.add_argument("term", type=str, help="Term")
+
     args = parser.parse_args()
 
-    match args.command:
-        case "build":
-            print(f"Building the inverted index...")
-            build_command()
-            print("Inverted index built successfully.")
-        case "search":
-            print(f"Searching for: {args.query}")
-            try:
+    try:
+        match args.command:
+            case "build":
+                print(f"Building the inverted index...")
+                build_command()
+                print("Inverted index built successfully.")
+            case "search":
+                print(f"Searching for: {args.query}")
                 results = search_command(args.query)
-            except FileNotFoundError:
-                print("Cache not found. Please build the index first.")
-                return
-            for i, movie in enumerate(results):
-                print(f"{i+1}: {movie['title']}")
-        case "tf":
-            try:
+                for i, movie in enumerate(results):
+                    print(f"{i+1}: {movie['title']}")
+            case "tf":
                 tf = tf_command(args.doc_id, args.term)
-            except FileNotFoundError:
-                print("Cache not found. Please build the index first.")
-                return
-            print(f"Term frequency for '{args.term}' in document {args.doc_id}: {tf}")
-        case _:
-            parser.print_help()
+                print(f"Term frequency for '{args.term}' in document {args.doc_id}: {tf}")
+            case "idf":
+                idf = idf_command(args.term)
+                print(f"Inverse document frequency of '{args.term}': {idf:.2f}")
+            case _:
+                parser.print_help()
+    except Exception as e:
+        print(e)
 
 if __name__ == "__main__":
     main()

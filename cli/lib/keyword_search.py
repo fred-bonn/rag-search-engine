@@ -1,4 +1,4 @@
-import pickle, string
+import pickle, string, math
 from collections import Counter
 from nltk.stem import PorterStemmer
 
@@ -103,10 +103,18 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]
     return results
 
 def tf_command(doc_id: int, term: str) -> int:
+    term_token = tokenize_term(term)
     index = InvertedIndex()
     index.load()
-    term_token = tokenize_term(term)
     return index.get_term_frequency(doc_id, term_token)
+
+def idf_command(term: str) -> float:
+    term_token = tokenize_term(term)
+    index = InvertedIndex()
+    index.load()
+    total_doc_count = len(index.docmap)
+    term_match_doc_count = len(index.get_documents(term_token))
+    return math.log((total_doc_count + 1) / (term_match_doc_count+1))
 
 def process(text: str) -> str:
     text = text.lower()
