@@ -1,6 +1,7 @@
-import argparse, json
+import argparse
 
-from keyword_search import search_command
+
+from lib.keyword_search import search_command
 
 DATA_FILE_PATH = "data/movies.json"
 

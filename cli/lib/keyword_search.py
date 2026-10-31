@@ -1,6 +1,6 @@
 from nltk.stem import PorterStemmer
 
-from search_utils import load_movies, DATA_PATH_STOPWORDS, Movie
+from .search_utils import load_movies, DATA_PATH_STOPWORDS, Movie
 import string as string
 
 

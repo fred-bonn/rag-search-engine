@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import TypedDict
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_PATH_MOVIES = PROJECT_ROOT / "data" / "movies.json"
 DATA_PATH_STOPWORDS = PROJECT_ROOT / "data" / "stopwords.txt"
 
