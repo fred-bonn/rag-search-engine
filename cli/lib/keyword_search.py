@@ -118,16 +118,13 @@ def build_command() -> None:
     index.save()
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
-    index = InvertedIndex()
-    index.load()
-
     if limit <= 0:
         return []
 
-    query_tokens = [token for token in tokenize(query)]
-    for token in query_tokens:
-        if token in STOPWORDS:
-            query_tokens.remove(token)
+    index = InvertedIndex()
+    index.load()
+
+    query_tokens = [token for token in tokenize(query) if token not in STOPWORDS]
 
     seen: set[int] = set()
     results: list[Movie] = []
@@ -179,7 +176,7 @@ def load_stopwords() -> list[str]:
         stopwords = [process(line).strip() for line in f]
     return stopwords
 
-STOPWORDS = load_stopwords()
+STOPWORDS: list[str] = load_stopwords()
 
 def tokenize(text: str) -> list[str]:
     text = process(text)
