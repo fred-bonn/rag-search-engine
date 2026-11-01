@@ -169,13 +169,14 @@ def bm25_tf_command(doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25
     return index.get_bm25_tf(doc_id, tokenize_term(term), k1, b)
 
 def process(text: str) -> str:
+    text = text.replace("\n", " ")
     text = text.lower()
     text = text.translate(str.maketrans("", "", string.punctuation))
-    return text.lower()
+    return text
 
 def load_stopwords() -> list[str]:
     with STOPWORDS_PATH.open("r") as f:
-        stopwords = [process(line) for line in f]
+        stopwords = [process(line).strip() for line in f]
     return stopwords
 
 STOPWORDS = load_stopwords()
