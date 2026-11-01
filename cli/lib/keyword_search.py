@@ -117,6 +117,22 @@ class InvertedIndex:
         tf = self.get_bm25_tf(doc_id, term)
         return tf * idf
 
+    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
+        query_tokens = tokenize(query)
+
+        seen: set[int] = set()
+        results: list[Movie] = []
+        for token in query_tokens:
+            for doc_id in self.get_documents(token):
+                if doc_id in seen:
+                    continue
+                seen.add(doc_id)
+                results.append(self.docmap[doc_id])
+                if len(results) >= limit:
+                    return results
+
+        return results
+
     def bm25_search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[tuple[Movie, float]]:
         query_tokens = tokenize(query)
 
@@ -136,25 +152,9 @@ def build_command() -> None:
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
     if limit <= 0:
         return []
-
     index = InvertedIndex()
     index.load()
-
-    query_tokens = [token for token in tokenize(query) if token not in STOPWORDS]
-
-    seen: set[int] = set()
-    results: list[Movie] = []
-    for token in query_tokens:
-        for doc_id in index.get_documents(token):
-            if doc_id in seen:
-                continue
-            seen.add(doc_id)
-            doc = index.docmap[doc_id]
-            results.append(doc)
-            if len(results) >= limit:
-                return results
-
-    return results
+    return index.search(query, limit)
 
 def bm25_search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[tuple[Movie, float]]:
     if limit <= 0:
