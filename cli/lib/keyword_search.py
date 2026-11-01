@@ -56,8 +56,10 @@ class InvertedIndex:
         docmap_path = CACHE_DIR / "docmap.pkl"
         term_frequencies_path = CACHE_DIR / "term_frequencies.pkl"
 
-        if not index_path.exists() or not docmap_path.exists() or not term_frequencies_path.exists():
-            raise FileNotFoundError("Cache files not found.")
+        paths = [index_path, docmap_path, term_frequencies_path]
+
+        if not all(path.exists() for path in paths):
+            raise FileNotFoundError("Cache files not found. Build first.")
 
         with index_path.open("rb") as f:
             self.index = pickle.load(f)
@@ -80,6 +82,13 @@ class InvertedIndex:
         tf = self.get_term_frequency(doc_id, term)
         idf = self.get_inverse_document_frequency(term)
         return tf * idf
+
+    def get_bm25_idf(self, term: str) -> float:
+        total_doc_count = len(self.docmap)
+        term_match_doc_count = len(self.get_documents(term))
+        return math.log(
+            ((total_doc_count - term_match_doc_count + 0.5) / (term_match_doc_count + 0.5)) + 1
+        )
 
 def build_command() -> None:
     index = InvertedIndex()
@@ -126,6 +135,11 @@ def tf_idf_command(doc_id: int, term: str) -> float:
     index = InvertedIndex()
     index.load()
     return index.get_tf_idf(doc_id, tokenize_term(term))
+
+def bm25_idf_command(term: str) -> float:
+    index = InvertedIndex()
+    index.load()
+    return index.get_bm25_idf(tokenize_term(term))
 
 def process(text: str) -> str:
     text = text.lower()
