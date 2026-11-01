@@ -23,17 +23,17 @@ def main() -> None:
 
     tf_parser = subparsers.add_parser("tf", help="Get term frequency for a document ID and term")
     tf_parser.add_argument("doc_id", type=int, help="Document ID")
-    tf_parser.add_argument("term", type=str, help="Term")
+    tf_parser.add_argument("term", type=str, help="Term to get frequency for")
 
     idf_parser = subparsers.add_parser("idf", help="Get inverse document frequency for a term")
-    idf_parser.add_argument("term", type=str, help="Term")
+    idf_parser.add_argument("term", type=str, help="Term to get inverse document frequency for")
 
     tfidf_parser = subparsers.add_parser("tfidf", help="Get TF-IDF for a term in a document")
     tfidf_parser.add_argument("doc_id", type=int, help="Document ID")
-    tfidf_parser.add_argument("term", type=str, help="Term")
+    tfidf_parser.add_argument("term", type=str, help="Term to get TF-IDF score for")
 
     bm25_idf_parser = subparsers.add_parser("bm25idf", help="Get BM25 IDF for a term")
-    bm25_idf_parser.add_argument("term", type=str, help="Term")
+    bm25_idf_parser.add_argument("term", type=str, help="Term to get BM25 IDF score for")
 
     bm25_tf_parser = subparsers.add_parser("bm25tf", help="Get BM25 TF for a term in a document")
     bm25_tf_parser.add_argument("doc_id", type=int, help="Document ID")
