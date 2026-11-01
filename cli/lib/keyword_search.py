@@ -70,17 +70,17 @@ class InvertedIndex:
 
         return
 
-    def get_term_frequency(self, doc_id: int, term: str) -> int:
+    def get_tf(self, doc_id: int, term: str) -> int:
         return self.term_frequencies.get(doc_id, Counter()).get(term, 0)
 
-    def get_inverse_document_frequency(self, term: str) -> float:
+    def get_idf(self, term: str) -> float:
         total_doc_count = len(self.docmap)
         term_match_doc_count = len(self.get_documents(term))
         return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
 
     def get_tf_idf(self, doc_id: int, term: str) -> float:
-        tf = self.get_term_frequency(doc_id, term)
-        idf = self.get_inverse_document_frequency(term)
+        tf = self.get_tf(doc_id, term)
+        idf = self.get_idf(term)
         return tf * idf
 
     def get_bm25_idf(self, term: str) -> float:
@@ -124,12 +124,12 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]
 def tf_command(doc_id: int, term: str) -> int:
     index = InvertedIndex()
     index.load()
-    return index.get_term_frequency(doc_id, tokenize_term(term))
+    return index.get_tf(doc_id, tokenize_term(term))
 
 def idf_command(term: str) -> float:
     index = InvertedIndex()
     index.load()
-    return index.get_inverse_document_frequency(tokenize_term(term))
+    return index.get_idf(tokenize_term(term))
 
 def tf_idf_command(doc_id: int, term: str) -> float:
     index = InvertedIndex()
