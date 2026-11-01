@@ -7,6 +7,7 @@ from .search_utils import (
     STOPWORDS_PATH,
     DEFAULT_SEARCH_LIMIT,
     BM25_K1,
+    BM25_B,
     Movie,
     load_movies
 )
@@ -17,9 +18,16 @@ class InvertedIndex:
         self.index: dict[str, set[int]] = {}
         self.docmap: dict[int, Movie] = {}
         self.term_frequencies: dict[int, Counter] = {}
+        self.doc_lengths: dict[int, int] = {}
+
+        self.index_path = CACHE_DIR / "index.pkl"
+        self.docmap_path = CACHE_DIR / "docmap.pkl"
+        self.term_frequencies_path = CACHE_DIR / "term_frequencies.pkl"
+        self.doc_lengths_path = CACHE_DIR / "doc_lengths.pkl"
 
     def __add_document(self, doc_id: int, text: str) -> None:
         tokens = tokenize(text)
+        self.doc_lengths[doc_id] = len(tokens)
         for token in tokens:
             if token not in self.index:
                 self.index[token] = set()
@@ -28,6 +36,11 @@ class InvertedIndex:
             if doc_id not in self.term_frequencies:
                 self.term_frequencies[doc_id] = Counter()
             self.term_frequencies[doc_id][token] += 1
+
+    def __get_avg_doc_length(self) -> float:
+        if not self.doc_lengths:
+            return 0.0
+        return sum(self.doc_lengths.values()) / len(self.doc_lengths)
 
     def get_documents(self, term: str) -> list[int]:
         return sorted(self.index.get(term, []))
@@ -41,33 +54,34 @@ class InvertedIndex:
     def save(self) -> None:
         CACHE_DIR.mkdir(exist_ok=True)
 
-        index_path = CACHE_DIR / "index.pkl"
-        docmap_path = CACHE_DIR / "docmap.pkl"
-        term_frequencies_path = CACHE_DIR / "term_frequencies.pkl"
-
-        with index_path.open("wb") as f:
+        with self.index_path.open("wb") as f:
             pickle.dump(self.index, f)
-        with docmap_path.open("wb") as f:
+        with self.docmap_path.open("wb") as f:
             pickle.dump(self.docmap, f)
-        with term_frequencies_path.open("wb") as f:
+        with self.term_frequencies_path.open("wb") as f:
             pickle.dump(self.term_frequencies, f)
+        with self.doc_lengths_path.open("wb") as f:
+            pickle.dump(self.doc_lengths, f)
 
     def load(self) -> None:
-        index_path = CACHE_DIR / "index.pkl"
-        docmap_path = CACHE_DIR / "docmap.pkl"
-        term_frequencies_path = CACHE_DIR / "term_frequencies.pkl"
-
-        paths = [index_path, docmap_path, term_frequencies_path]
+        paths = [
+            self.index_path,
+            self.docmap_path,
+            self.term_frequencies_path,
+            self.doc_lengths_path,
+        ]
 
         if not all(path.exists() for path in paths):
             raise FileNotFoundError("Cache files not found. Build first.")
 
-        with index_path.open("rb") as f:
+        with self.index_path.open("rb") as f:
             self.index = pickle.load(f)
-        with docmap_path.open("rb") as f:
+        with self.docmap_path.open("rb") as f:
             self.docmap = pickle.load(f)
-        with term_frequencies_path.open("rb") as f:
+        with self.term_frequencies_path.open("rb") as f:
             self.term_frequencies = pickle.load(f)
+        with self.doc_lengths_path.open("rb") as f:
+            self.doc_lengths = pickle.load(f)
 
         return
 
@@ -91,9 +105,12 @@ class InvertedIndex:
             ((total_doc_count - term_match_doc_count + 0.5) / (term_match_doc_count + 0.5)) + 1
         )
 
-    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1) -> float:
+    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25_B) -> float:
         tf = self.get_tf(doc_id, term)
-        return (tf * (k1 + 1)) / (tf + k1)
+        doc_length = self.doc_lengths.get(doc_id, 0)
+        avg_doc_length = self.__get_avg_doc_length()
+        length_norm = 1 - b + b * (doc_length / avg_doc_length)
+        return (tf * (k1 + 1)) / (tf + k1 * length_norm)
 
 def build_command() -> None:
     index = InvertedIndex()
@@ -146,10 +163,10 @@ def bm25_idf_command(term: str) -> float:
     index.load()
     return index.get_bm25_idf(tokenize_term(term))
 
-def bm25_tf_command(doc_id: int, term: str, k1: float = BM25_K1) -> float:
+def bm25_tf_command(doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25_B) -> float:
     index = InvertedIndex()
     index.load()
-    return index.get_bm25_tf(doc_id, tokenize_term(term), k1)
+    return index.get_bm25_tf(doc_id, tokenize_term(term), k1, b)
 
 def process(text: str) -> str:
     text = text.lower()
