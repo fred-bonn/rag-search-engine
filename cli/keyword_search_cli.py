@@ -3,8 +3,9 @@ import argparse
 from lib.keyword_search import (
     BM25_K1,
     BM25_B,
-    search_command,
     build_command,
+    search_command,
+    bm25_search_command,
     tf_command,
     idf_command,
     tf_idf_command,
@@ -42,6 +43,9 @@ def main() -> None:
     bm25_tf_parser.add_argument("k1", type=float, nargs="?", default=BM25_K1, help="Tunable BM25 K1 parameter")
     bm25_tf_parser.add_argument("b", type=float, nargs="?", default=BM25_B, help="Tunable BM25 B parameter")
 
+    bm25_search_parser = subparsers.add_parser("bm25search", help="Search movies using full BM25 scoring")
+    bm25_search_parser.add_argument("query", type=str, help="Search query")
+
     args = parser.parse_args()
 
     try:
@@ -55,6 +59,12 @@ def main() -> None:
                 results = search_command(args.query)
                 for i, movie in enumerate(results):
                     print(f"{i+1}: {movie['title']}")
+            case "bm25search":
+                print(f"Searching for: {args.query}")
+                results = bm25_search_command(args.query)
+                for i, item in enumerate(results):
+                    movie = item[0]
+                    print(f"{i+1}: ({movie["id"]}) {movie["title"]} - Score: {item[1]:.2f}")
             case "tf":
                 tf = tf_command(args.doc_id, args.term)
                 print(f"Term frequency for '{args.term}' in document {args.doc_id}: {tf}")
