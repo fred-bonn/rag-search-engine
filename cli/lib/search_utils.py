@@ -9,6 +9,7 @@ STOPWORDS_PATH = PROJECT_ROOT / "data" / "stopwords.txt"
 CACHE_DIR = PROJECT_ROOT / "cache"
 
 DEFAULT_SEARCH_LIMIT = 5
+BM25_K1 = 1.5
 
 class Movie(TypedDict):
     id: int

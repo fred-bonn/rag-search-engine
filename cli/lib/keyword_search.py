@@ -6,6 +6,7 @@ from .search_utils import (
     CACHE_DIR,
     STOPWORDS_PATH,
     DEFAULT_SEARCH_LIMIT,
+    BM25_K1,
     Movie,
     load_movies
 )
@@ -90,6 +91,10 @@ class InvertedIndex:
             ((total_doc_count - term_match_doc_count + 0.5) / (term_match_doc_count + 0.5)) + 1
         )
 
+    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1) -> float:
+        tf = self.get_tf(doc_id, term)
+        return (tf * (k1 + 1)) / (tf + k1)
+
 def build_command() -> None:
     index = InvertedIndex()
     index.build()
@@ -140,6 +145,11 @@ def bm25_idf_command(term: str) -> float:
     index = InvertedIndex()
     index.load()
     return index.get_bm25_idf(tokenize_term(term))
+
+def bm25_tf_command(doc_id: int, term: str, k1: float = BM25_K1) -> float:
+    index = InvertedIndex()
+    index.load()
+    return index.get_bm25_tf(doc_id, tokenize_term(term), k1)
 
 def process(text: str) -> str:
     text = text.lower()
