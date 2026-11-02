@@ -3,6 +3,7 @@ from sentence_transformers import SentenceTransformer
 
 from .search_utils import (
     CACHE_DIR,
+    DEFAULT_SEARCH_LIMIT,
     Movie,
     load_movies,
 )
@@ -43,6 +44,22 @@ class SemanticSearch:
 
         return self.build_embeddings(documents)
 
+    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[tuple[Movie, float]]:
+        if limit <= 0:
+            return []
+
+        if self.embeddings is None or self.documents is None:
+            raise ValueError("No embeddings loaded. Call load_or_create_embeddings first.")
+
+        query_embedding = self.generate_embedding(query)
+        results = [
+            (document, cosine_similarity(query_embedding, embedding))
+            for document, embedding in zip(self.documents, self.embeddings)
+        ]
+        results.sort(key=lambda result: result[1], reverse=True)
+
+        return results[:limit]
+
     def generate_embedding(self, text: str) -> np.ndarray:
         if not text:
             raise ValueError("Input text cannot be empty.")
@@ -51,15 +68,10 @@ class SemanticSearch:
         embedding = self.model.encode([text])
         return embedding[0]
 
-def verify_model() -> bool:
-    try:
-        semantic_search = SemanticSearch()
-        print(f"Model loaded: {semantic_search.model}")
-        print(f"Max sequence length: {semantic_search.model.max_seq_length}")
-        return True
-    except Exception as e:
-        print(f"Error initializing SemanticSearch model: {e}")
-    return False
+def verify_model() -> None:
+    semantic_search = SemanticSearch()
+    print(f"Model loaded:        {semantic_search.model}")
+    print(f"Max sequence length: {semantic_search.model.max_seq_length}")
 
 def embed_text(text: str) -> None:
     semantic_search = SemanticSearch()
@@ -81,3 +93,22 @@ def verify_embeddings() -> None:
     embeddings = semantic_search.load_or_create_embeddings(list(movies.values()))
     print(f"Number of docs:   {len(movies)}")
     print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
+
+def semantic_search(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> None:
+    semantic_search_engine = SemanticSearch()
+    movies = load_movies()
+    semantic_search_engine.load_or_create_embeddings(list(movies.values()))
+    results = semantic_search_engine.search(query, limit)
+
+    for rank, (movie, _) in enumerate(results, start=1):
+        print(f"{rank}: {movie["title"]}: {movie["description"]}")
+
+def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+
+    return dot_product / (norm1 * norm2)

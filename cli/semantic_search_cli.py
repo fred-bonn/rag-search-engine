@@ -5,7 +5,9 @@ from lib.semantic_search import (
     embed_text,
     embed_query_text,
     verify_embeddings,
+    semantic_search,
 )
+from lib.search_utils import DEFAULT_SEARCH_LIMIT
 
 
 def main() -> None:
@@ -22,6 +24,12 @@ def main() -> None:
 
     subparsers.add_parser("verify_embeddings", help="Verify the movie embeddings")
 
+    search_parser = subparsers.add_parser("search", help="Search movies by semantic similarity")
+    search_parser.add_argument("query", type=str, help="Search query")
+    search_parser.add_argument(
+        "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results"
+    )
+
     args = parser.parse_args()
 
     try:
@@ -34,6 +42,8 @@ def main() -> None:
                 embed_query_text(args.query)
             case "verify_embeddings":
                 verify_embeddings()
+            case "search":
+                semantic_search(args.query, args.limit)
             case _:
                 parser.print_help()
     except Exception as e:
