@@ -19,7 +19,6 @@ class InvertedIndex:
         self.docmap: dict[int, Movie] = {}
         self.term_frequencies: dict[int, Counter] = {}
         self.doc_lengths: dict[int, int] = {}
-
         self.index_path = CACHE_DIR / "index.pkl"
         self.docmap_path = CACHE_DIR / "docmap.pkl"
         self.term_frequencies_path = CACHE_DIR / "term_frequencies.pkl"

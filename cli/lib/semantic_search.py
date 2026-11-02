@@ -68,6 +68,13 @@ def embed_text(text: str) -> None:
     print(f"First 3 dimensions of embedding: {embedding[:3]}")
     print(f"Dimensions:                      {embedding.shape[0]}")
 
+def embed_query_text(query: str) -> None:
+    semantic_search = SemanticSearch()
+    embedding = semantic_search.generate_embedding(query)
+    print(f"Text:                            {query}")
+    print(f"First 3 dimensions of embedding: {embedding[:3]}")
+    print(f"Dimensions:                      {embedding.shape[0]}")
+
 def verify_embeddings() -> None:
     semantic_search = SemanticSearch()
     movies = load_movies()
