@@ -12,6 +12,7 @@ from lib.keyword_search import (
     bm25_idf_command,
     bm25_tf_command,
 )
+from lib.search_utils import DEFAULT_SEARCH_LIMIT
 
 
 def main() -> None:
@@ -20,6 +21,9 @@ def main() -> None:
 
     search_parser = subparsers.add_parser("search", help="Search movies using keywords")
     search_parser.add_argument("query", type=str, help="Search query")
+    search_parser.add_argument(
+        "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results"
+    )
 
     subparsers.add_parser("build", help="Build the inverted index")
 
@@ -45,6 +49,9 @@ def main() -> None:
 
     bm25_search_parser = subparsers.add_parser("bm25search", help="Search movies using full BM25 scoring")
     bm25_search_parser.add_argument("query", type=str, help="Search query")
+    bm25_search_parser.add_argument(
+        "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results"
+    )
 
     args = parser.parse_args()
 
@@ -56,12 +63,12 @@ def main() -> None:
                 print("Inverted index built successfully.")
             case "search":
                 print(f"Searching for: {args.query}")
-                results = search_command(args.query)
+                results = search_command(args.query, args.limit)
                 for i, movie in enumerate(results):
                     print(f"{i+1}: {movie['title']}")
             case "bm25search":
                 print(f"Searching for: {args.query}")
-                results = bm25_search_command(args.query)
+                results = bm25_search_command(args.query, args.limit)
                 for i, item in enumerate(results):
                     movie = item[0]
                     print(f"{i+1}: ({movie["id"]}) {movie["title"]} - Score: {item[1]:.2f}")
