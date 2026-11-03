@@ -5,6 +5,7 @@ from lib.semantic_search import (
     embed_text,
     embed_query_text,
     verify_embeddings,
+    embed_chunks,
     semantic_search,
     fixed_size_chunking,
     semantic_chunking,
@@ -13,8 +14,14 @@ from lib.search_utils import (
     DEFAULT_SEARCH_LIMIT,
     DEFAULT_CHUNK_SIZE,
     DEFAULT_CHUNK_SIZE_SEMANTIC,
-    DEFAULT_OVERLAP,
+    DEFAULT_OVERLAP_CLI,
 )
+
+
+def print_chunks(header: str, chunks: list[str]) -> None:
+    print(header)
+    for i, chunk in enumerate(chunks, start=1):
+        print(f"{i}. {chunk}")
 
 
 def main() -> None:
@@ -31,6 +38,8 @@ def main() -> None:
 
     subparsers.add_parser("verify_embeddings", help="Verify the movie embeddings")
 
+    subparsers.add_parser("embed_chunks", help="Generate and cache chunk embeddings")
+
     search_parser = subparsers.add_parser("search", help="Search movies by semantic similarity")
     search_parser.add_argument("query", type=str, help="Search query")
     search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
@@ -38,12 +47,12 @@ def main() -> None:
     chunk_parser = subparsers.add_parser("chunk", help="Chunk a text into smaller pieces")
     chunk_parser.add_argument("text", type=str, help="Text to chunk")
     chunk_parser.add_argument("--chunk-size", type=int, default=DEFAULT_CHUNK_SIZE, help="Size of each chunk")
-    chunk_parser.add_argument("--overlap", type=int, default=DEFAULT_OVERLAP, help="Number of overlapping words between chunks")
+    chunk_parser.add_argument("--overlap", type=int, default=DEFAULT_OVERLAP_CLI, help="Number of overlapping words between chunks")
 
     semantic_chunk_parser = subparsers.add_parser("semantic_chunk", help="Chunk a text into semantically meaningful pieces")
     semantic_chunk_parser.add_argument("text", type=str, help="Text to chunk")
     semantic_chunk_parser.add_argument("--max-chunk-size", type=int, default=DEFAULT_CHUNK_SIZE_SEMANTIC, help="Maximum size of each chunk")
-    semantic_chunk_parser.add_argument("--overlap", type=int, default=DEFAULT_OVERLAP, help="Number of overlapping words between chunks")
+    semantic_chunk_parser.add_argument("--overlap", type=int, default=DEFAULT_OVERLAP_CLI, help="Number of overlapping words between chunks")
 
     args = parser.parse_args()
 
@@ -60,9 +69,13 @@ def main() -> None:
             case "search":
                 semantic_search(args.query, args.limit)
             case "chunk":
-                fixed_size_chunking(args.text, args.chunk_size, args.overlap)
+                chunks = fixed_size_chunking(args.text, args.chunk_size, args.overlap)
+                print_chunks(f"Chunking {len(args.text)} characters", chunks)
             case "semantic_chunk":
-                semantic_chunking(args.text, args.max_chunk_size, args.overlap)
+                chunks = semantic_chunking(args.text, args.max_chunk_size, args.overlap)
+                print_chunks(f"Semantically chunking {len(args.text)} characters", chunks)
+            case "embed_chunks":
+                embed_chunks()
             case _:
                 parser.print_help()
     except Exception as e:

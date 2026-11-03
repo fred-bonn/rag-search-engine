@@ -11,7 +11,8 @@ CACHE_DIR = PROJECT_ROOT / "cache"
 DEFAULT_SEARCH_LIMIT = 5
 DEFAULT_CHUNK_SIZE = 200
 DEFAULT_CHUNK_SIZE_SEMANTIC = 4
-DEFAULT_OVERLAP = 0
+DEFAULT_OVERLAP_CLI = 0
+DEFAULT_OVERLAP_SEMANTIC = 1
 
 BM25_K1 = 1.5
 BM25_B = 0.75
@@ -20,6 +21,11 @@ class Movie(TypedDict):
     id: int
     title: str
     description: str
+
+class MetaData(TypedDict):
+    movie_idx: int
+    chunk_idx: int
+    total_chunks: int
 
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:
