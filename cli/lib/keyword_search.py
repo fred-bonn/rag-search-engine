@@ -13,6 +13,30 @@ from .search_utils import (
 )
 
 
+def process(text: str) -> str:
+    text = text.replace("\n", " ")
+    text = text.lower()
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    return text
+
+def load_stopwords() -> list[str]:
+    with STOPWORDS_PATH.open("r") as f:
+        stopwords = [process(line).strip() for line in f]
+    return stopwords
+
+STOPWORDS: list[str] = load_stopwords()
+
+def tokenize(text: str) -> list[str]:
+    text = process(text)
+    stemmer = PorterStemmer()
+    return [stemmer.stem(token) for token in text.split() if token not in STOPWORDS]
+
+def tokenize_term(term: str) -> str:
+    tokens = tokenize(term)
+    if len(tokens) != 1:
+        raise ValueError("Term must tokenize to exactly one token.")
+    return tokens[0]
+
 class InvertedIndex:
     def __init__(self):
         self.index: dict[str, set[int]] = {}
@@ -143,6 +167,7 @@ class InvertedIndex:
         ranked_doc_ids = sorted(scores, key=lambda doc_id: scores[doc_id], reverse=True)[:limit]
         return [(self.docmap[doc_id], scores[doc_id]) for doc_id in ranked_doc_ids]
 
+
 def build_command() -> None:
     index = InvertedIndex()
     index.build()
@@ -186,27 +211,3 @@ def bm25_tf_command(doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25
     index = InvertedIndex()
     index.load()
     return index.get_bm25_tf(doc_id, tokenize_term(term), k1, b)
-
-def process(text: str) -> str:
-    text = text.replace("\n", " ")
-    text = text.lower()
-    text = text.translate(str.maketrans("", "", string.punctuation))
-    return text
-
-def load_stopwords() -> list[str]:
-    with STOPWORDS_PATH.open("r") as f:
-        stopwords = [process(line).strip() for line in f]
-    return stopwords
-
-STOPWORDS: list[str] = load_stopwords()
-
-def tokenize(text: str) -> list[str]:
-    text = process(text)
-    stemmer = PorterStemmer()
-    return [stemmer.stem(token) for token in text.split() if token not in STOPWORDS]
-
-def tokenize_term(term: str) -> str:
-    tokens = tokenize(term)
-    if len(tokens) != 1:
-        raise ValueError("Term must tokenize to exactly one token.")
-    return tokens[0]

@@ -14,6 +14,16 @@ from .search_utils import (
 )
 
 
+def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
+    dot_product = np.dot(vec1, vec2, out=None)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+
+    return dot_product / (norm1 * norm2)
+
 class SemanticSearch:
     def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
         self.model = SentenceTransformer(model_name)
@@ -90,7 +100,7 @@ class ChunkedSemanticSearch(SemanticSearch):
         for movie_idx, document in enumerate(documents):
             if not document["description"]:
                 continue
-            description_chunks = semantic_chunking(
+            description_chunks = semantic_chunking_command(
                 document["description"], DEFAULT_CHUNK_SIZE_SEMANTIC, DEFAULT_OVERLAP_SEMANTIC
             )
             for chunk_idx, chunk in enumerate(description_chunks):
@@ -128,39 +138,39 @@ class ChunkedSemanticSearch(SemanticSearch):
         return self.build_chunk_embeddings(documents)
 
 
-def verify_model() -> None:
+def verify_model_command() -> None:
     semantic_search = SemanticSearch()
     print(f"Model loaded:        {semantic_search.model}")
     print(f"Max sequence length: {semantic_search.model.max_seq_length}")
 
-def embed_text(text: str) -> None:
+def embed_text_command(text: str) -> None:
     semantic_search = SemanticSearch()
     embedding = semantic_search.generate_embedding(text)
     print(f"Text:                            {text}")
     print(f"First 3 dimensions of embedding: {embedding[:3]}")
     print(f"Dimensions:                      {embedding.shape[0]}")
 
-def embed_query_text(query: str) -> None:
+def embed_query_text_command(query: str) -> None:
     semantic_search = SemanticSearch()
     embedding = semantic_search.generate_embedding(query)
     print(f"Text:                            {query}")
     print(f"First 3 dimensions of embedding: {embedding[:3]}")
     print(f"Dimensions:                      {embedding.shape[0]}")
 
-def verify_embeddings() -> None:
+def verify_embeddings_command() -> None:
     semantic_search = SemanticSearch()
     movies = load_movies()
     embeddings = semantic_search.load_or_create_embeddings(list(movies.values()))
     print(f"Number of docs:   {len(movies)}")
     print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
 
-def embed_chunks() -> None:
+def embed_chunks_command() -> None:
     chunked_search = ChunkedSemanticSearch()
     movies = load_movies()
     embeddings = chunked_search.load_or_create_chunk_embeddings(list(movies.values()))
     print(f"Generated {len(embeddings)} chunked embeddings")
 
-def semantic_search(query: str, limit: int) -> None:
+def semantic_search_command(query: str, limit: int) -> None:
     semantic_search_engine = SemanticSearch()
     movies = load_movies()
     semantic_search_engine.load_or_create_embeddings(list(movies.values()))
@@ -169,17 +179,7 @@ def semantic_search(query: str, limit: int) -> None:
     for rank, (movie, _) in enumerate(results, start=1):
         print(f"{rank}: {movie["title"]}: {movie["description"]}")
 
-def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
-    dot_product = np.dot(vec1, vec2, out=None)
-    norm1 = np.linalg.norm(vec1)
-    norm2 = np.linalg.norm(vec2)
-
-    if norm1 == 0 or norm2 == 0:
-        return 0.0
-
-    return dot_product / (norm1 * norm2)
-
-def fixed_size_chunking(text: str, chunk_size: int = 200, overlap: int = 0) -> list[str]:
+def fixed_size_chunking_command(text: str, chunk_size: int = 200, overlap: int = 0) -> list[str]:
     if chunk_size <= 0:
         raise ValueError("Chunk size must be a positive integer.")
     if not 0 <= overlap < chunk_size:
@@ -198,7 +198,7 @@ def fixed_size_chunking(text: str, chunk_size: int = 200, overlap: int = 0) -> l
 
     return chunks
 
-def semantic_chunking(text: str, max_chunk_size: int, overlap: int) -> list[str]:
+def semantic_chunking_command(text: str, max_chunk_size: int, overlap: int) -> list[str]:
     if max_chunk_size <= 0:
         raise ValueError("Max chunk size must be a positive integer.")
     if not 0 <= overlap < max_chunk_size:

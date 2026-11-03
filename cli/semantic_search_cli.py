@@ -1,14 +1,14 @@
 import argparse
 
 from lib.semantic_search import (
-    verify_model,
-    embed_text,
-    embed_query_text,
-    verify_embeddings,
-    embed_chunks,
-    semantic_search,
-    fixed_size_chunking,
-    semantic_chunking,
+    verify_model_command,
+    embed_text_command,
+    embed_query_text_command,
+    verify_embeddings_command,
+    embed_chunks_command,
+    semantic_search_command,
+    fixed_size_chunking_command,
+    semantic_chunking_command,
 )
 from lib.search_utils import (
     DEFAULT_SEARCH_LIMIT,
@@ -59,23 +59,23 @@ def main() -> None:
     try:
         match args.command:
             case "verify":
-                verify_model()
+                verify_model_command()
             case "embed_text":
-                embed_text(args.text)
+                embed_text_command(args.text)
             case "embed_query":
-                embed_query_text(args.query)
+                embed_query_text_command(args.query)
             case "verify_embeddings":
-                verify_embeddings()
+                verify_embeddings_command()
             case "search":
-                semantic_search(args.query, args.limit)
+                semantic_search_command(args.query, args.limit)
             case "chunk":
-                chunks = fixed_size_chunking(args.text, args.chunk_size, args.overlap)
+                chunks = fixed_size_chunking_command(args.text, args.chunk_size, args.overlap)
                 print_chunks(f"Chunking {len(args.text)} characters", chunks)
             case "semantic_chunk":
-                chunks = semantic_chunking(args.text, args.max_chunk_size, args.overlap)
+                chunks = semantic_chunking_command(args.text, args.max_chunk_size, args.overlap)
                 print_chunks(f"Semantically chunking {len(args.text)} characters", chunks)
             case "embed_chunks":
-                embed_chunks()
+                embed_chunks_command()
             case _:
                 parser.print_help()
     except Exception as e:
