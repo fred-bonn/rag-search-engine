@@ -113,12 +113,22 @@ def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
 
     return dot_product / (norm1 * norm2)
 
-def fixed_size_chunking(text: str, chunk_size: int = 200) -> None:
+def fixed_size_chunking(text: str, chunk_size: int = 200, overlap: int = 0) -> None:
     if chunk_size <= 0:
         raise ValueError("Chunk size must be a positive integer.")
+    if not 0 <= overlap < chunk_size:
+        raise ValueError("Overlap must be a non-negative integer less than chunk size.")
 
     words = text.split()
-    chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
+
+    chunks = []
+    start = 0
+    while start < len(words):
+        end = start + chunk_size
+        chunk = " ".join(words[start:end])
+        chunks.append(chunk)
+        start += chunk_size - overlap
+
     total_characters = len("\n".join(chunks))
     print(f"Chunking {total_characters} characters")
     for i, chunk in enumerate(chunks, start=1):
