@@ -129,7 +129,6 @@ def fixed_size_chunking(text: str, chunk_size: int = 200, overlap: int = 0) -> N
         chunks.append(chunk)
         start += chunk_size - overlap
 
-    total_characters = len("\n".join(chunks))
-    print(f"Chunking {total_characters} characters")
+    print(f"Chunking {len(text)} characters")
     for i, chunk in enumerate(chunks, start=1):
         print(f"{i}. {chunk}")
