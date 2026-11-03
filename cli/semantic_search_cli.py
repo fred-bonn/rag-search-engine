@@ -6,6 +6,7 @@ from lib.semantic_search import (
     embed_query_text,
     verify_embeddings,
     semantic_search,
+    fixed_size_chunking,
 )
 from lib.search_utils import DEFAULT_SEARCH_LIMIT
 
@@ -26,8 +27,12 @@ def main() -> None:
 
     search_parser = subparsers.add_parser("search", help="Search movies by semantic similarity")
     search_parser.add_argument("query", type=str, help="Search query")
-    search_parser.add_argument(
-        "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results"
+    search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+
+    chunk_parser = subparsers.add_parser("chunk", help="Chunk a text into smaller pieces")
+    chunk_parser.add_argument("text", type=str, help="Text to chunk")
+    chunk_parser.add_argument(
+        "--chunk-size", type=int, default=200, help="Maximum size of each chunk"
     )
 
     args = parser.parse_args()
@@ -44,6 +49,8 @@ def main() -> None:
                 verify_embeddings()
             case "search":
                 semantic_search(args.query, args.limit)
+            case "chunk":
+                fixed_size_chunking(args.text, args.chunk_size)
             case _:
                 parser.print_help()
     except Exception as e:

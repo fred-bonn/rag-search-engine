@@ -112,3 +112,14 @@ def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
         return 0.0
 
     return dot_product / (norm1 * norm2)
+
+def fixed_size_chunking(text: str, chunk_size: int = 200) -> None:
+    if chunk_size <= 0:
+        raise ValueError("Chunk size must be a positive integer.")
+
+    words = text.split()
+    chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
+    total_characters = len("\n".join(chunks))
+    print(f"Chunking {total_characters} characters")
+    for i, chunk in enumerate(chunks, start=1):
+        print(f"{i}. {chunk}")
