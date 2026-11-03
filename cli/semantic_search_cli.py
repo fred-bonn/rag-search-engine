@@ -7,6 +7,7 @@ from lib.semantic_search import (
     verify_embeddings_command,
     embed_chunks_command,
     semantic_search_command,
+    search_chunked_command,
     fixed_size_chunking_command,
     semantic_chunking_command,
 )
@@ -44,6 +45,10 @@ def main() -> None:
     search_parser.add_argument("query", type=str, help="Search query")
     search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
 
+    search_chunked_parser = subparsers.add_parser("search_chunked", help="Search movies by chunk semantic similarity")
+    search_chunked_parser.add_argument("query", type=str, help="Search query")
+    search_chunked_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+
     chunk_parser = subparsers.add_parser("chunk", help="Chunk a text into smaller pieces")
     chunk_parser.add_argument("text", type=str, help="Text to chunk")
     chunk_parser.add_argument("--chunk-size", type=int, default=DEFAULT_CHUNK_SIZE, help="Size of each chunk")
@@ -68,6 +73,8 @@ def main() -> None:
                 verify_embeddings_command()
             case "search":
                 semantic_search_command(args.query, args.limit)
+            case "search_chunked":
+                search_chunked_command(args.query, args.limit)
             case "chunk":
                 chunks = fixed_size_chunking_command(args.text, args.chunk_size, args.overlap)
                 print_chunks(f"Chunking {len(args.text)} characters", chunks)

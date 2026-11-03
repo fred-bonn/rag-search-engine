@@ -27,6 +27,17 @@ class MetaData(TypedDict):
     chunk_idx: int
     total_chunks: int
 
+class ChunkScore(TypedDict):
+    chunk_idx: int
+    movie_idx: int
+    score: float
+
+class ChunkedSemanticSearchResult(TypedDict):
+    id: int
+    title: str
+    document: str
+    score: float
+
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:
         raw_data = json.load(f)["movies"]
