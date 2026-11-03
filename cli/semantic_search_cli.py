@@ -7,8 +7,14 @@ from lib.semantic_search import (
     verify_embeddings,
     semantic_search,
     fixed_size_chunking,
+    semantic_chunking,
 )
-from lib.search_utils import DEFAULT_SEARCH_LIMIT
+from lib.search_utils import (
+    DEFAULT_SEARCH_LIMIT,
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_CHUNK_SIZE_SEMANTIC,
+    DEFAULT_OVERLAP,
+)
 
 
 def main() -> None:
@@ -31,8 +37,13 @@ def main() -> None:
 
     chunk_parser = subparsers.add_parser("chunk", help="Chunk a text into smaller pieces")
     chunk_parser.add_argument("text", type=str, help="Text to chunk")
-    chunk_parser.add_argument("--chunk-size", type=int, default=200, help="Maximum size of each chunk")
-    chunk_parser.add_argument("--overlap", type=int, default=0, help="Number of overlapping words between chunks")
+    chunk_parser.add_argument("--chunk-size", type=int, default=DEFAULT_CHUNK_SIZE, help="Size of each chunk")
+    chunk_parser.add_argument("--overlap", type=int, default=DEFAULT_OVERLAP, help="Number of overlapping words between chunks")
+
+    semantic_chunk_parser = subparsers.add_parser("semantic_chunk", help="Chunk a text into semantically meaningful pieces")
+    semantic_chunk_parser.add_argument("text", type=str, help="Text to chunk")
+    semantic_chunk_parser.add_argument("--max-chunk-size", type=int, default=DEFAULT_CHUNK_SIZE_SEMANTIC, help="Maximum size of each chunk")
+    semantic_chunk_parser.add_argument("--overlap", type=int, default=DEFAULT_OVERLAP, help="Number of overlapping words between chunks")
 
     args = parser.parse_args()
 
@@ -50,6 +61,8 @@ def main() -> None:
                 semantic_search(args.query, args.limit)
             case "chunk":
                 fixed_size_chunking(args.text, args.chunk_size, args.overlap)
+            case "semantic_chunk":
+                semantic_chunking(args.text, args.max_chunk_size, args.overlap)
             case _:
                 parser.print_help()
     except Exception as e:

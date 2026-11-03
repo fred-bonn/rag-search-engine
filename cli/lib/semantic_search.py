@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
@@ -125,10 +127,28 @@ def fixed_size_chunking(text: str, chunk_size: int = 200, overlap: int = 0) -> N
     start = 0
     while start < len(words):
         end = start + chunk_size
-        chunk = " ".join(words[start:end])
-        chunks.append(chunk)
+        chunks.append(" ".join(words[start:end]))
         start += chunk_size - overlap
 
     print(f"Chunking {len(text)} characters")
     for i, chunk in enumerate(chunks, start=1):
         print(f"{i}. {chunk}")
+
+def semantic_chunking(text: str, max_chunk_size: int, overlap: int) -> None:
+    if max_chunk_size <= 0:
+        raise ValueError("Max chunk size must be a positive integer.")
+    if not 0 <= overlap < max_chunk_size:
+        raise ValueError("Overlap must be a non-negative integer less than max chunk size.")
+
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+
+    chunks = []
+    start = 0
+    while start < len(sentences):
+        end = start + max_chunk_size
+        chunks.append(sentences[start:end])
+        start += max_chunk_size - overlap
+
+    print(f"Semantically chunking {len(text)} characters")
+    for i, chunk in enumerate(chunks, start=1):
+        print(f"{i}. {" ".join(chunk)}")
