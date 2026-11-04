@@ -11,6 +11,7 @@ from .search_utils import (
     MetaData,
     ChunkScore,
     Movie,
+    SemanticSearchResult,
     ChunkedSemanticSearchResult,
     load_movies,
 )
@@ -61,7 +62,7 @@ class SemanticSearch:
 
         return self.build_embeddings(documents)
 
-    def search(self, query: str, limit: int) -> list[tuple[Movie, float]]:
+    def search(self, query: str, limit: int) -> list[SemanticSearchResult]:
         if limit <= 0:
             return []
 
@@ -69,11 +70,16 @@ class SemanticSearch:
             raise ValueError("No embeddings loaded. Call load_or_create_embeddings first.")
 
         query_embedding = self.generate_embedding(query)
-        results = [
-            (document, cosine_similarity(query_embedding, embedding))
+        results: list[SemanticSearchResult] = [
+            {
+                "id": document["id"],
+                "title": document["title"],
+                "document": document["description"],
+                "score": cosine_similarity(query_embedding, embedding),
+            }
             for document, embedding in zip(self.documents, self.embeddings)
         ]
-        results.sort(key=lambda result: result[1], reverse=True)
+        results.sort(key=lambda result: result["score"], reverse=True)
 
         return results[:limit]
 
@@ -222,8 +228,8 @@ def semantic_search_command(query: str, limit: int) -> None:
     semantic_search_engine.load_or_create_embeddings(list(movies.values()))
     results = semantic_search_engine.search(query, limit)
 
-    for rank, (movie, _) in enumerate(results, start=1):
-        print(f"{rank}: {movie["title"]}: {movie["description"]}")
+    for rank, result in enumerate(results, start=1):
+        print(f"{rank}: {result["title"]}: {result["document"]}")
 
 def search_chunked_command(query: str, limit: int) -> None:
     chunked_search_engine = ChunkedSemanticSearch()

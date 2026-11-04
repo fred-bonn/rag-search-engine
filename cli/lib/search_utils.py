@@ -32,6 +32,23 @@ class ChunkScore(TypedDict):
     movie_idx: int
     score: float
 
+class KeywordSearchResult(TypedDict):
+    id: int
+    title: str
+    document: str
+
+class BM25SearchResult(TypedDict):
+    id: int
+    title: str
+    document: str
+    score: float
+
+class SemanticSearchResult(TypedDict):
+    id: int
+    title: str
+    document: str
+    score: float
+
 class ChunkedSemanticSearchResult(TypedDict):
     id: int
     title: str

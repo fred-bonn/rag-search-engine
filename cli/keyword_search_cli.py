@@ -64,14 +64,13 @@ def main() -> None:
             case "search":
                 print(f"Searching for: {args.query}")
                 results = search_command(args.query, args.limit)
-                for i, movie in enumerate(results):
-                    print(f"{i+1}: {movie['title']}")
+                for i, result in enumerate(results):
+                    print(f"{i+1}: {result['title']}")
             case "bm25search":
                 print(f"Searching for: {args.query}")
                 results = bm25_search_command(args.query, args.limit)
-                for i, item in enumerate(results):
-                    movie = item[0]
-                    print(f"{i+1}: ({movie["id"]}) {movie["title"]} - Score: {item[1]:.2f}")
+                for i, result in enumerate(results):
+                    print(f"{i+1}: ({result["id"]}) {result["title"]} - Score: {result["score"]:.2f}")
             case "tf":
                 tf = tf_command(args.doc_id, args.term)
                 print(f"Term frequency for '{args.term}' in document {args.doc_id}: {tf}")

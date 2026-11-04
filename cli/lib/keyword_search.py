@@ -9,6 +9,8 @@ from .search_utils import (
     BM25_K1,
     BM25_B,
     Movie,
+    KeywordSearchResult,
+    BM25SearchResult,
     load_movies
 )
 
@@ -140,23 +142,30 @@ class InvertedIndex:
         tf = self.get_bm25_tf(doc_id, term)
         return tf * idf
 
-    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
+    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[KeywordSearchResult]:
         query_tokens = tokenize(query)
 
         seen: set[int] = set()
-        results: list[Movie] = []
+        results: list[KeywordSearchResult] = []
         for token in query_tokens:
             for doc_id in self.get_documents(token):
                 if doc_id in seen:
                     continue
                 seen.add(doc_id)
-                results.append(self.docmap[doc_id])
+                movie = self.docmap[doc_id]
+                results.append(
+                    {
+                        "id": movie["id"],
+                        "title": movie["title"],
+                        "document": movie["description"],
+                    }
+                )
                 if len(results) >= limit:
                     return results
 
         return results
 
-    def bm25_search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[tuple[Movie, float]]:
+    def bm25_search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[BM25SearchResult]:
         query_tokens = tokenize(query)
 
         scores: dict[int, float] = {}
@@ -165,7 +174,18 @@ class InvertedIndex:
                 scores[doc_id] = scores.get(doc_id, 0) + self.bm25(doc_id, token)
 
         ranked_doc_ids = sorted(scores, key=lambda doc_id: scores[doc_id], reverse=True)[:limit]
-        return [(self.docmap[doc_id], scores[doc_id]) for doc_id in ranked_doc_ids]
+        results: list[BM25SearchResult] = []
+        for doc_id in ranked_doc_ids:
+            movie = self.docmap[doc_id]
+            results.append(
+                {
+                    "id": movie["id"],
+                    "title": movie["title"],
+                    "document": movie["description"],
+                    "score": scores[doc_id],
+                }
+            )
+        return results
 
 
 def build_command() -> None:
@@ -173,14 +193,14 @@ def build_command() -> None:
     index.build()
     index.save()
 
-def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Movie]:
+def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[KeywordSearchResult]:
     if limit <= 0:
         return []
     index = InvertedIndex()
     index.load()
     return index.search(query, limit)
 
-def bm25_search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[tuple[Movie, float]]:
+def bm25_search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[BM25SearchResult]:
     if limit <= 0:
         return []
     index = InvertedIndex()
