@@ -11,8 +11,7 @@ from .search_utils import (
     MetaData,
     ChunkScore,
     Movie,
-    SemanticSearchResult,
-    ChunkedSemanticSearchResult,
+    ScoredSearchResult,
     load_movies,
 )
 
@@ -62,7 +61,7 @@ class SemanticSearch:
 
         return self.build_embeddings(documents)
 
-    def search(self, query: str, limit: int) -> list[SemanticSearchResult]:
+    def search(self, query: str, limit: int) -> list[ScoredSearchResult]:
         if limit <= 0:
             return []
 
@@ -70,7 +69,7 @@ class SemanticSearch:
             raise ValueError("No embeddings loaded. Call load_or_create_embeddings first.")
 
         query_embedding = self.generate_embedding(query)
-        results: list[SemanticSearchResult] = [
+        results: list[ScoredSearchResult] = [
             {
                 "id": document["id"],
                 "title": document["title"],
@@ -145,7 +144,7 @@ class ChunkedSemanticSearch(SemanticSearch):
 
         return self.build_chunk_embeddings(documents)
 
-    def search_chunks(self, query: str, limit: int) -> list[ChunkedSemanticSearchResult]:
+    def search_chunks(self, query: str, limit: int) -> list[ScoredSearchResult]:
         if limit <= 0:
             return []
 
@@ -175,7 +174,7 @@ class ChunkedSemanticSearch(SemanticSearch):
                 best_scores[movie_idx] = score
         filtered_scores = sorted(best_scores.items(), key=lambda item: item[1], reverse=True)[:limit]
 
-        results: list[ChunkedSemanticSearchResult] = []
+        results: list[ScoredSearchResult] = []
         for movie_idx, score in filtered_scores:
             movie = self.documents[movie_idx]
             results.append(

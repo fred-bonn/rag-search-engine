@@ -10,7 +10,7 @@ from .search_utils import (
     BM25_B,
     Movie,
     KeywordSearchResult,
-    BM25SearchResult,
+    ScoredSearchResult,
     load_movies
 )
 
@@ -165,7 +165,7 @@ class InvertedIndex:
 
         return results
 
-    def bm25_search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[BM25SearchResult]:
+    def bm25_search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[ScoredSearchResult]:
         query_tokens = tokenize(query)
 
         scores: dict[int, float] = {}
@@ -174,7 +174,7 @@ class InvertedIndex:
                 scores[doc_id] = scores.get(doc_id, 0) + self.bm25(doc_id, token)
 
         ranked_doc_ids = sorted(scores, key=lambda doc_id: scores[doc_id], reverse=True)[:limit]
-        results: list[BM25SearchResult] = []
+        results: list[ScoredSearchResult] = []
         for doc_id in ranked_doc_ids:
             movie = self.docmap[doc_id]
             results.append(
@@ -200,7 +200,7 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Keywor
     index.load()
     return index.search(query, limit)
 
-def bm25_search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[BM25SearchResult]:
+def bm25_search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[ScoredSearchResult]:
     if limit <= 0:
         return []
     index = InvertedIndex()
