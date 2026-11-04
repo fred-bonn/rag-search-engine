@@ -260,6 +260,10 @@ def semantic_chunking_command(text: str, max_chunk_size: int, overlap: int) -> l
     if not 0 <= overlap < max_chunk_size:
         raise ValueError("Overlap must be a non-negative integer less than max chunk size.")
 
+    text = text.strip()
+    if not text:
+        return []
+
     sentences = re.split(r"(?<=[.!?])\s+", text)
 
     chunks = []
@@ -268,7 +272,9 @@ def semantic_chunking_command(text: str, max_chunk_size: int, overlap: int) -> l
         chunk_sentences = sentences[i : i + max_chunk_size]
         if chunks and len(chunk_sentences) <= overlap:
             break
-        chunks.append(" ".join(chunk_sentences))
+        stripped_chunk = " ".join(chunk_sentences).strip()
+        if stripped_chunk:
+            chunks.append(stripped_chunk)
         i += max_chunk_size - overlap
 
     return chunks
