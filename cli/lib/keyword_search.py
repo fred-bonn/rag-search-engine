@@ -1,6 +1,7 @@
 import pickle, string, math
 from collections import Counter
 from nltk.stem import PorterStemmer
+from pathlib import Path
 
 from .search_utils import (
     CACHE_DIR,
@@ -67,6 +68,14 @@ class InvertedIndex:
             return 0.0
         return sum(self.doc_lengths.values()) / len(self.doc_lengths)
 
+    def _get_cache_paths(self) -> list[Path]:
+        return [
+            self.index_path,
+            self.docmap_path,
+            self.term_frequencies_path,
+            self.doc_lengths_path,
+        ]
+
     def get_documents(self, term: str) -> list[int]:
         return sorted(self.index.get(term, []))
 
@@ -89,14 +98,7 @@ class InvertedIndex:
             pickle.dump(self.doc_lengths, f)
 
     def load(self) -> None:
-        paths = [
-            self.index_path,
-            self.docmap_path,
-            self.term_frequencies_path,
-            self.doc_lengths_path,
-        ]
-
-        if not all(path.exists() for path in paths):
+        if not all(path.exists() for path in self._get_cache_paths()):
             raise FileNotFoundError("Cache files not found. Build first.")
 
         with self.index_path.open("rb") as f:

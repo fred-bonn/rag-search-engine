@@ -17,6 +17,8 @@ DEFAULT_OVERLAP_SEMANTIC = 1
 BM25_K1 = 1.5
 BM25_B = 0.75
 
+DEFAULT_ALPHA = 0.5
+
 class Movie(TypedDict):
     id: int
     title: str
@@ -42,6 +44,14 @@ class ScoredSearchResult(TypedDict):
     title: str
     document: str
     score: float
+
+class HybridSearchResult(TypedDict):
+    id: int
+    title: str
+    document: str
+    hybrid_score: float
+    bm25_score: float
+    semantic_score: float
 
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:
