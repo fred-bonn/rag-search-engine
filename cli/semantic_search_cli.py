@@ -64,17 +64,32 @@ def main() -> None:
     try:
         match args.command:
             case "verify":
-                verify_model_command()
+                model, max_seq_length = verify_model_command()
+                print(f"Model loaded:        {model}")
+                print(f"Max sequence length: {max_seq_length}")
             case "embed_text":
-                embed_text_command(args.text)
+                embedding = embed_text_command(args.text)
+                print(f"Text:                            {args.text}")
+                print(f"First 3 dimensions of embedding: {embedding[:3]}")
+                print(f"Dimensions:                      {embedding.shape[0]}")
             case "embed_query":
-                embed_query_text_command(args.query)
+                embedding = embed_query_text_command(args.query)
+                print(f"Text:                            {args.query}")
+                print(f"First 3 dimensions of embedding: {embedding[:3]}")
+                print(f"Dimensions:                      {embedding.shape[0]}")
             case "verify_embeddings":
-                verify_embeddings_command()
+                embeddings = verify_embeddings_command()
+                print(f"Number of docs:   {embeddings.shape[0]}")
+                print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
             case "search":
-                semantic_search_command(args.query, args.limit)
+                results = semantic_search_command(args.query, args.limit)
+                for rank, result in enumerate(results, start=1):
+                    print(f"{rank}: {result['title']}: {result['document']}")
             case "search_chunked":
-                search_chunked_command(args.query, args.limit)
+                results = search_chunked_command(args.query, args.limit)
+                for i, result in enumerate(results, start=1):
+                    print(f"\n{i}. {result['title']} (score: {result['score']:.4f})")
+                    print(f"   {result['document']}...")
             case "chunk":
                 chunks = fixed_size_chunking_command(args.text, args.chunk_size, args.overlap)
                 print_chunks(f"Chunking {len(args.text)} characters", chunks)
@@ -82,7 +97,8 @@ def main() -> None:
                 chunks = semantic_chunking_command(args.text, args.max_chunk_size, args.overlap)
                 print_chunks(f"Semantically chunking {len(args.text)} characters", chunks)
             case "embed_chunks":
-                embed_chunks_command()
+                embeddings = embed_chunks_command()
+                print(f"Generated {len(embeddings)} chunked embeddings")
             case _:
                 parser.print_help()
     except Exception as e:

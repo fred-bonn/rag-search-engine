@@ -189,56 +189,39 @@ class ChunkedSemanticSearch(SemanticSearch):
         return results
 
 
-def verify_model_command() -> None:
+def verify_model_command() -> tuple[str, int | None]:
     semantic_search = SemanticSearch()
-    print(f"Model loaded:        {semantic_search.model}")
-    print(f"Max sequence length: {semantic_search.model.max_seq_length}")
+    return str(semantic_search.model), semantic_search.model.max_seq_length
 
-def embed_text_command(text: str) -> None:
+def embed_text_command(text: str) -> np.ndarray:
     semantic_search = SemanticSearch()
-    embedding = semantic_search.generate_embedding(text)
-    print(f"Text:                            {text}")
-    print(f"First 3 dimensions of embedding: {embedding[:3]}")
-    print(f"Dimensions:                      {embedding.shape[0]}")
+    return semantic_search.generate_embedding(text)
 
-def embed_query_text_command(query: str) -> None:
+def embed_query_text_command(query: str) -> np.ndarray:
     semantic_search = SemanticSearch()
-    embedding = semantic_search.generate_embedding(query)
-    print(f"Text:                            {query}")
-    print(f"First 3 dimensions of embedding: {embedding[:3]}")
-    print(f"Dimensions:                      {embedding.shape[0]}")
+    return semantic_search.generate_embedding(query)
 
-def verify_embeddings_command() -> None:
+def verify_embeddings_command() -> np.ndarray:
     semantic_search = SemanticSearch()
     movies = load_movies()
-    embeddings = semantic_search.load_or_create_embeddings(list(movies.values()))
-    print(f"Number of docs:   {len(movies)}")
-    print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
+    return semantic_search.load_or_create_embeddings(list(movies.values()))
 
-def embed_chunks_command() -> None:
+def embed_chunks_command() -> np.ndarray:
     chunked_search = ChunkedSemanticSearch()
     movies = load_movies()
-    embeddings = chunked_search.load_or_create_chunk_embeddings(list(movies.values()))
-    print(f"Generated {len(embeddings)} chunked embeddings")
+    return chunked_search.load_or_create_chunk_embeddings(list(movies.values()))
 
-def semantic_search_command(query: str, limit: int) -> None:
+def semantic_search_command(query: str, limit: int) -> list[ScoredSearchResult]:
     semantic_search_engine = SemanticSearch()
     movies = load_movies()
     semantic_search_engine.load_or_create_embeddings(list(movies.values()))
-    results = semantic_search_engine.search(query, limit)
+    return semantic_search_engine.search(query, limit)
 
-    for rank, result in enumerate(results, start=1):
-        print(f"{rank}: {result["title"]}: {result["document"]}")
-
-def search_chunked_command(query: str, limit: int) -> None:
+def search_chunked_command(query: str, limit: int) -> list[ScoredSearchResult]:
     chunked_search_engine = ChunkedSemanticSearch()
     movies = load_movies()
     chunked_search_engine.load_or_create_chunk_embeddings(list(movies.values()))
-    results = chunked_search_engine.search_chunks(query, limit)
-
-    for i, result in enumerate(results, start=1):
-        print(f"\n{i}. {result["title"]} (score: {result["score"]:.4f})")
-        print(f"   {result["document"]}...")
+    return chunked_search_engine.search_chunks(query, limit)
 
 def fixed_size_chunking_command(text: str, chunk_size: int = 200, overlap: int = 0) -> list[str]:
     if chunk_size <= 0:
