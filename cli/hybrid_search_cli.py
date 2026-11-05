@@ -32,7 +32,7 @@ def main() -> None:
                     print(f"{i}. {result["title"]}")
                     print(f"   Hybrid Score: {result["hybrid_score"]:.4f}")
                     print(f"   BM25 Score: {result["bm25_score"]:.4f}, Semantic Score: {result["semantic_score"]:.4f}")
-                    print(f"   Document: {result["document"]}")
+                    print(f"   Document: {result["document"][:100]}")
             case "normalize":
                 for score in normalize_command(args.numbers):
                     print(f"{score:.4f}")

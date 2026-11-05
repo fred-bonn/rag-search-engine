@@ -181,7 +181,7 @@ class ChunkedSemanticSearch(SemanticSearch):
                 {
                     "id": movie["id"],
                     "title": movie["title"],
-                    "document": movie["description"][:100],
+                    "document": movie["description"],
                     "score": score,
                 }
             )

@@ -89,7 +89,7 @@ def main() -> None:
                 results = search_chunked_command(args.query, args.limit)
                 for i, result in enumerate(results, start=1):
                     print(f"\n{i}. {result['title']} (score: {result['score']:.4f})")
-                    print(f"   {result['document']}...")
+                    print(f"   {result['document'][:100]}...")
             case "chunk":
                 chunks = fixed_size_chunking_command(args.text, args.chunk_size, args.overlap)
                 print_chunks(f"Chunking {len(args.text)} characters", chunks)
