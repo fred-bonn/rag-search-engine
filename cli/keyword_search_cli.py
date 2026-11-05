@@ -12,7 +12,9 @@ from lib.keyword_search import (
     bm25_idf_command,
     bm25_tf_command,
 )
-from lib.search_utils import DEFAULT_SEARCH_LIMIT
+from lib.search_utils import (
+    DEFAULT_SEARCH_LIMIT
+)
 
 
 def main() -> None:
