@@ -8,6 +8,32 @@ from .search_utils import (
 )
 
 
+def normalize(scores: list[float]) -> list[float]:
+    if not scores:
+        return []
+
+    minimum = min(scores)
+    maximum = max(scores)
+    score_range = maximum - minimum
+
+    if score_range == 0:
+        return [1.0 for _ in scores]
+
+    return [(number - minimum) / score_range for number in scores]
+
+def entry(movie: Movie) -> HybridSearchResult:
+    return {
+        "id": movie["id"],
+        "title": movie["title"],
+        "document": movie["description"],
+        "hybrid_score": 0.0,
+        "bm25_score": 0.0,
+        "semantic_score": 0.0,
+    }
+
+def hybrid_score(bm25_score: float, semantic_score: float, alpha: float) -> float:
+    return alpha * bm25_score + (1 - alpha) * semantic_score
+
 class HybridSearch:
     def __init__(self, documents: list[Movie]) -> None:
         self.documents = documents
@@ -38,33 +64,14 @@ class HybridSearch:
         combined: dict[int, HybridSearchResult] = {}
         for result, score in zip(bm25_results, bm25_scores):
             movie = documents_by_id[result["id"]]
-            combined[movie["id"]] = {
-                "id": movie["id"],
-                "title": movie["title"],
-                "document": movie["description"][:100],
-                "hybrid_score": 0.0,
-                "bm25_score": score,
-                "semantic_score": 0.0,
-            }
+            combined.setdefault(movie["id"], entry(movie))["bm25_score"] = score
 
         for result, score in zip(semantic_results, semantic_scores):
             movie = documents_by_id[result["id"]]
-            if movie["id"] in combined:
-                combined[movie["id"]]["semantic_score"] = score
-            else:
-                combined[movie["id"]] = {
-                    "id": movie["id"],
-                    "title": movie["title"],
-                    "document": movie["description"][:100],
-                    "hybrid_score": 0.0,
-                    "bm25_score": 0.0,
-                    "semantic_score": score,
-                }
+            combined.setdefault(movie["id"], entry(movie))["semantic_score"] = score
 
         for result in combined.values():
-            result["hybrid_score"] = (
-                alpha * result["bm25_score"] + (1 - alpha) * result["semantic_score"]
-            )
+            result["hybrid_score"] = hybrid_score(result["bm25_score"], result["semantic_score"], alpha)
 
         ranked = sorted(combined.values(), key=lambda result: result["hybrid_score"], reverse=True)
         return ranked[:limit]
@@ -75,19 +82,10 @@ class HybridSearch:
 def normalize_command(numbers: list[float]) -> list[float]:
     if not numbers:
         return []
-
-    minimum = min(numbers)
-    maximum = max(numbers)
-    score_range = maximum - minimum
-
-    if score_range == 0:
-        return [1.0 for _ in numbers]
-
-    return [(number - minimum) / score_range for number in numbers]
+    return normalize(numbers)
 
 def weighted_search_command(query: str, alpha: float, limit: int) -> list[HybridSearchResult]:
     if limit <= 0:
         return []
-
     hybrid_search = HybridSearch(list(load_movies().values()))
     return hybrid_search.weighted_search(query, alpha, limit)
