@@ -35,8 +35,19 @@ def hybrid_score(bm25_score: float, semantic_score: float, alpha: float) -> floa
     return alpha * bm25_score + (1 - alpha) * semantic_score
 
 class HybridSearch:
-    def __init__(self, documents: list[Movie]) -> None:
+    def __init__(self, documents: list[Movie] | None = None) -> None:
         self.documents = documents
+        self.semantic_search: ChunkedSemanticSearch | None = None
+        self.inverted_index: InvertedIndex | None = None
+
+    def _ensure_loaded(self) -> None:
+        if self.semantic_search is not None and self.inverted_index is not None:
+            return
+
+        documents = self.documents
+        if documents is None:
+            documents = list(load_movies().values())
+            self.documents = documents
 
         self.semantic_search = ChunkedSemanticSearch()
         self.semantic_search.load_or_create_chunk_embeddings(documents)
@@ -47,11 +58,17 @@ class HybridSearch:
         self.inverted_index.load()
 
     def _bm25_search(self, query: str, limit: int) -> list[ScoredSearchResult]:
+        assert self.inverted_index is not None
         return self.inverted_index.bm25_search(query, limit)
 
     def weighted_search(self, query: str, alpha: float, limit: int = 5) -> list[HybridSearchResult]:
+        if alpha < 0 or alpha > 1:
+            raise ValueError("Alpha must be a floating point number between 0 and 1")
         if limit <= 0:
             return []
+
+        self._ensure_loaded()
+        assert self.semantic_search is not None and self.documents is not None
 
         documents_by_id = {document["id"]: document for document in self.documents}
 
@@ -85,7 +102,5 @@ def normalize_command(numbers: list[float]) -> list[float]:
     return normalize(numbers)
 
 def weighted_search_command(query: str, alpha: float, limit: int) -> list[HybridSearchResult]:
-    if limit <= 0:
-        return []
-    hybrid_search = HybridSearch(list(load_movies().values()))
+    hybrid_search = HybridSearch()
     return hybrid_search.weighted_search(query, alpha, limit)

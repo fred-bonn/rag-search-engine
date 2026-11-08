@@ -145,6 +145,9 @@ class InvertedIndex:
         return tf * idf
 
     def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[KeywordSearchResult]:
+        if limit <= 0:
+            return []
+
         query_tokens = tokenize(query)
 
         seen: set[int] = set()
@@ -168,6 +171,9 @@ class InvertedIndex:
         return results
 
     def bm25_search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[ScoredSearchResult]:
+        if limit <= 0:
+            return []
+
         query_tokens = tokenize(query)
 
         scores: dict[int, float] = {}
@@ -196,15 +202,11 @@ def build_command() -> None:
     index.save()
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[KeywordSearchResult]:
-    if limit <= 0:
-        return []
     index = InvertedIndex()
     index.load()
     return index.search(query, limit)
 
 def bm25_search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[ScoredSearchResult]:
-    if limit <= 0:
-        return []
     index = InvertedIndex()
     index.load()
     return index.bm25_search(query, limit)
