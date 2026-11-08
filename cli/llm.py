@@ -1,4 +1,5 @@
 import os
+from collections.abc import Callable
 from functools import cache
 
 from dotenv import load_dotenv
@@ -44,3 +45,16 @@ If there are no spelling errors, or if you're unsure, output the original query 
 Output only the final query text, nothing else.
 User query: "{query}"
 """
+
+Enhancement = Callable[[str], str]
+
+ENHANCEMENTS: dict[str, Enhancement] = {
+    "spell": spell_correct_query,
+}
+
+def enhance_query(query: str, enhancement: str | None) -> str:
+    if enhancement is None:
+        return query
+    enhanced = ENHANCEMENTS[enhancement](query)
+    print(f"Enhanced query ({enhancement}): '{query}' -> '{enhanced}'")
+    return enhanced
