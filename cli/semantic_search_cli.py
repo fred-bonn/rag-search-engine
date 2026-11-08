@@ -17,6 +17,10 @@ from lib.search_utils import (
     DEFAULT_CHUNK_SIZE_SEMANTIC,
     DEFAULT_OVERLAP_CLI,
 )
+from llm import (
+    ENHANCEMENTS,
+    enhance_query,
+)
 
 
 def print_chunks(header: str, chunks: list[str]) -> None:
@@ -44,10 +48,12 @@ def main() -> int:
     search_parser = subparsers.add_parser("search", help="Search movies by semantic similarity")
     search_parser.add_argument("query", type=str, help="Search query")
     search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+    search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
 
     search_chunked_parser = subparsers.add_parser("search_chunked", help="Search movies by chunk semantic similarity")
     search_chunked_parser.add_argument("query", type=str, help="Search query")
     search_chunked_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+    search_chunked_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
 
     chunk_parser = subparsers.add_parser("chunk", help="Chunk a text into smaller pieces")
     chunk_parser.add_argument("text", type=str, help="Text to chunk")
@@ -82,11 +88,13 @@ def main() -> int:
                 print(f"Number of docs:   {embeddings.shape[0]}")
                 print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
             case "search":
-                results = semantic_search_command(args.query, args.limit)
+                query = enhance_query(args.query, args.enhance)
+                results = semantic_search_command(query, args.limit)
                 for rank, result in enumerate(results, start=1):
                     print(f"{rank}: {result['title']}: {result['document']}")
             case "search_chunked":
-                results = search_chunked_command(args.query, args.limit)
+                query = enhance_query(args.query, args.enhance)
+                results = search_chunked_command(query, args.limit)
                 for i, result in enumerate(results, start=1):
                     print(f"\n{i}. {result['title']} (score: {result['score']:.4f})")
                     print(f"   {result['document'][:100]}...")

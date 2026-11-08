@@ -27,6 +27,7 @@ def main() -> int:
     weighted_search_parser.add_argument("query", type=str, help="Search query")
     weighted_search_parser.add_argument("--alpha", type=float, default=DEFAULT_ALPHA, help="Weighting factor for hybrid search")
     weighted_search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+    weighted_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
 
     rrf_search_parser = subparsers.add_parser("rrf-search", help="Search movies using RRF search")
     rrf_search_parser.add_argument("query", type=str, help="Search query")
@@ -39,7 +40,8 @@ def main() -> int:
     try:
         match args.command:
             case "weighted-search":
-                results = weighted_search_command(args.query, args.alpha, args.limit)
+                query = enhance_query(args.query, args.enhance)
+                results = weighted_search_command(query, args.alpha, args.limit)
                 for i, result in enumerate(results, start=1):
                     print(f"{i}. {result["title"]}")
                     print(f"   Hybrid Score: {result["hybrid_score"]:.4f}")

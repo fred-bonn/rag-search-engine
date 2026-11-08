@@ -15,6 +15,10 @@ from lib.keyword_search import (
 from lib.search_utils import (
     DEFAULT_SEARCH_LIMIT
 )
+from llm import (
+    ENHANCEMENTS,
+    enhance_query,
+)
 
 
 def main() -> int:
@@ -26,6 +30,7 @@ def main() -> int:
     search_parser.add_argument(
         "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results"
     )
+    search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
 
     subparsers.add_parser("build", help="Build the inverted index")
 
@@ -54,6 +59,7 @@ def main() -> int:
     bm25_search_parser.add_argument(
         "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results"
     )
+    bm25_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
 
     args = parser.parse_args()
 
@@ -64,13 +70,15 @@ def main() -> int:
                 build_command()
                 print("Inverted index built successfully.")
             case "search":
-                print(f"Searching for: {args.query}")
-                results = search_command(args.query, args.limit)
+                query = enhance_query(args.query, args.enhance)
+                print(f"Searching for: {query}")
+                results = search_command(query, args.limit)
                 for i, result in enumerate(results):
                     print(f"{i+1}: {result['title']}")
             case "bm25search":
-                print(f"Searching for: {args.query}")
-                results = bm25_search_command(args.query, args.limit)
+                query = enhance_query(args.query, args.enhance)
+                print(f"Searching for: {query}")
+                results = bm25_search_command(query, args.limit)
                 for i, result in enumerate(results):
                     print(f"{i+1}: ({result["id"]}) {result["title"]} - Score: {result["score"]:.2f}")
             case "tf":
