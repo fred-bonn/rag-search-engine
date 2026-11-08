@@ -10,7 +10,7 @@ from lib.search_utils import (
 )
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description="Hybrid Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -40,7 +40,9 @@ def main() -> None:
                 parser.print_help()
     except Exception as e:
         print(e)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
