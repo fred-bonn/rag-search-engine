@@ -15,7 +15,7 @@ from lib.keyword_search import (
 from lib.search_utils import (
     DEFAULT_SEARCH_LIMIT
 )
-from llm import (
+from query_enhancement import (
     ENHANCEMENTS,
     enhance_query,
 )

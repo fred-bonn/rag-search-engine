@@ -10,7 +10,7 @@ from lib.search_utils import (
     DEFAULT_SEARCH_LIMIT,
     DEFAULT_RRF_K,
 )
-from llm import (
+from query_enhancement import (
     ENHANCEMENTS,
     enhance_query,
 )
