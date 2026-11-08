@@ -10,6 +10,9 @@ from lib.search_utils import (
     DEFAULT_SEARCH_LIMIT,
     DEFAULT_RRF_K,
 )
+from llm import (
+    spell_correct_query,
+)
 
 
 def main() -> int:
@@ -28,6 +31,7 @@ def main() -> int:
     rrf_search_parser.add_argument("query", type=str, help="Search query")
     rrf_search_parser.add_argument("-k", type=int, default=DEFAULT_RRF_K, help="Higher values gives lower ranked movies more influence")
     rrf_search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+    rrf_search_parser.add_argument("--enhance", type=str, choices=["spell"], help="Query enhancement method")
 
     args = parser.parse_args()
 
@@ -41,7 +45,11 @@ def main() -> int:
                     print(f"   BM25 Score: {result["bm25_score"]:.4f}, Semantic Score: {result["semantic_score"]:.4f}")
                     print(f"   {result["document"][:100]}")
             case "rrf-search":
-                results = rrf_search_command(args.query, args.k, args.limit)
+                query = args.query
+                if args.enhance == "spell":
+                    query = spell_correct_query(query)
+                    print(f"Enhanced query ({args.enhance}): '{args.query}' -> '{query}'")
+                results = rrf_search_command(query, args.k, args.limit)
                 for i, result in enumerate(results, start=1):
                     bm25_rank = result["bm25_rank"] if result["bm25_rank"] is not None else "N/A"
                     semantic_rank = result["semantic_rank"] if result["semantic_rank"] is not None else "N/A"
