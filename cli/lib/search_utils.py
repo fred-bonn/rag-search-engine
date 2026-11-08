@@ -18,6 +18,7 @@ BM25_K1 = 1.5
 BM25_B = 0.75
 
 DEFAULT_ALPHA = 0.5
+DEFAULT_RRF_K = 60
 
 class Movie(TypedDict):
     id: int
@@ -52,6 +53,14 @@ class HybridSearchResult(TypedDict):
     hybrid_score: float
     bm25_score: float
     semantic_score: float
+
+class RRFSearchResult(TypedDict):
+    id: int
+    title: str
+    document: str
+    rrf_score: float
+    bm25_rank: int | None
+    semantic_rank: int | None
 
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:
