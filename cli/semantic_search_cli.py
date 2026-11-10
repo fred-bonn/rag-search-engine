@@ -24,6 +24,10 @@ from lib.query_enhancement import (
     ENHANCEMENTS,
     enhance_query,
 )
+from lib.reranking import (
+    RERANKERS,
+    rerank,
+)
 
 
 def print_chunks(header: str, chunks: list[str]) -> None:
@@ -52,11 +56,13 @@ def main() -> int:
     search_parser.add_argument("query", type=str, help="Search query")
     search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
+    search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
 
     search_chunked_parser = subparsers.add_parser("search_chunked", help="Search movies by chunk semantic similarity")
     search_chunked_parser.add_argument("query", type=str, help="Search query")
     search_chunked_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     search_chunked_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
+    search_chunked_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
 
     chunk_parser = subparsers.add_parser("chunk", help="Chunk a text into smaller pieces")
     chunk_parser.add_argument("text", type=str, help="Text to chunk")
@@ -92,12 +98,14 @@ def main() -> int:
                 print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
             case "search":
                 query = enhance_query(args.query, args.enhance)
-                results = semantic_search_command(query, args.limit)
+                search = rerank(args.rerank_method)(semantic_search_command)
+                results = search(query, limit=args.limit)
                 for rank, result in enumerate(results, start=1):
                     print(format_scored_result(result, rank))
             case "search_chunked":
                 query = enhance_query(args.query, args.enhance)
-                results = search_chunked_command(query, args.limit)
+                search = rerank(args.rerank_method)(search_chunked_command)
+                results = search(query, limit=args.limit)
                 for rank, result in enumerate(results, start=1):
                     print(format_scored_result(result, rank))
             case "chunk":

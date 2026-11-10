@@ -19,6 +19,7 @@ from lib.query_enhancement import (
     enhance_query,
 )
 from lib.reranking import (
+    RERANKERS,
     rerank,
 )
 
@@ -35,13 +36,14 @@ def main() -> int:
     weighted_search_parser.add_argument("--alpha", type=float, default=DEFAULT_ALPHA, help="Weighting factor for hybrid search")
     weighted_search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     weighted_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
+    weighted_search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
 
     rrf_search_parser = subparsers.add_parser("rrf-search", help="Search movies using RRF search")
     rrf_search_parser.add_argument("query", type=str, help="Search query")
     rrf_search_parser.add_argument("-k", type=int, default=DEFAULT_RRF_K, help="Higher values gives lower ranked movies more influence")
     rrf_search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     rrf_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
-    rrf_search_parser.add_argument("--rerank-method", type=str, choices=["individual"], help="Re-ranks results with LLMs")
+    rrf_search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
 
     args = parser.parse_args()
 
@@ -49,13 +51,14 @@ def main() -> int:
         match args.command:
             case "weighted-search":
                 query = enhance_query(args.query, args.enhance)
-                results = weighted_search_command(query, args.alpha, args.limit)
+                search = rerank(args.rerank_method)(weighted_search_command)
+                results = search(query, args.alpha, limit=args.limit)
                 for i, result in enumerate(results, start=1):
                     print(format_hybrid_result(result, i))
             case "rrf-search":
                 query = enhance_query(args.query, args.enhance)
-                search_command = rerank(args.rerank_method)(rrf_search_command)
-                results = search_command(query, args.k, limit=args.limit)
+                search = rerank(args.rerank_method)(rrf_search_command)
+                results = search(query, args.k, limit=args.limit)
                 for i, result in enumerate(results, start=1):
                     print(format_rrf_result(result, i))
             case "normalize":

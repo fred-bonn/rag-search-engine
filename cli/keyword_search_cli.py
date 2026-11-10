@@ -23,6 +23,10 @@ from lib.query_enhancement import (
     ENHANCEMENTS,
     enhance_query,
 )
+from lib.reranking import (
+    RERANKERS,
+    rerank,
+)
 
 
 def main() -> int:
@@ -35,6 +39,7 @@ def main() -> int:
         "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results"
     )
     search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
+    search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
 
     subparsers.add_parser("build", help="Build the inverted index")
 
@@ -64,6 +69,7 @@ def main() -> int:
         "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results"
     )
     bm25_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
+    bm25_search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
 
     args = parser.parse_args()
 
@@ -76,13 +82,15 @@ def main() -> int:
             case "search":
                 query = enhance_query(args.query, args.enhance)
                 print(f"Searching for: {query}")
-                results = search_command(query, args.limit)
+                search = rerank(args.rerank_method)(search_command)
+                results = search(query, limit=args.limit)
                 for i, result in enumerate(results, start=1):
                     print(format_keyword_result(result, i))
             case "bm25search":
                 query = enhance_query(args.query, args.enhance)
                 print(f"Searching for: {query}")
-                results = bm25_search_command(query, args.limit)
+                search = rerank(args.rerank_method)(bm25_search_command)
+                results = search(query, limit=args.limit)
                 for i, result in enumerate(results, start=1):
                     print(format_scored_result(result, i))
             case "tf":
