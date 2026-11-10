@@ -17,7 +17,7 @@ from lib.search_utils import (
     DEFAULT_CHUNK_SIZE_SEMANTIC,
     DEFAULT_OVERLAP_CLI,
 )
-from query_enhancement import (
+from lib.query_enhancement import (
     ENHANCEMENTS,
     enhance_query,
 )
