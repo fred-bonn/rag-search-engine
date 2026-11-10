@@ -1,5 +1,9 @@
 import argparse
 
+from lib.formatting import (
+    format_keyword_result,
+    format_scored_result,
+)
 from lib.keyword_search import (
     BM25_K1,
     BM25_B,
@@ -73,14 +77,14 @@ def main() -> int:
                 query = enhance_query(args.query, args.enhance)
                 print(f"Searching for: {query}")
                 results = search_command(query, args.limit)
-                for i, result in enumerate(results):
-                    print(f"{i+1}: {result['title']}")
+                for i, result in enumerate(results, start=1):
+                    print(format_keyword_result(result, i))
             case "bm25search":
                 query = enhance_query(args.query, args.enhance)
                 print(f"Searching for: {query}")
                 results = bm25_search_command(query, args.limit)
-                for i, result in enumerate(results):
-                    print(f"{i+1}: ({result["id"]}) {result["title"]} - Score: {result["score"]:.2f}")
+                for i, result in enumerate(results, start=1):
+                    print(format_scored_result(result, i))
             case "tf":
                 tf = tf_command(args.doc_id, args.term)
                 print(f"Term frequency for '{args.term}' in document {args.doc_id}: {tf}")

@@ -1,5 +1,8 @@
 import argparse
 
+from lib.formatting import (
+    format_scored_result,
+)
 from lib.semantic_search import (
     verify_model_command,
     embed_text_command,
@@ -91,13 +94,12 @@ def main() -> int:
                 query = enhance_query(args.query, args.enhance)
                 results = semantic_search_command(query, args.limit)
                 for rank, result in enumerate(results, start=1):
-                    print(f"{rank}: {result['title']}: {result['document']}")
+                    print(format_scored_result(result, rank))
             case "search_chunked":
                 query = enhance_query(args.query, args.enhance)
                 results = search_chunked_command(query, args.limit)
-                for i, result in enumerate(results, start=1):
-                    print(f"\n{i}. {result['title']} (score: {result['score']:.4f})")
-                    print(f"   {result['document'][:100]}...")
+                for rank, result in enumerate(results, start=1):
+                    print(format_scored_result(result, rank))
             case "chunk":
                 chunks = fixed_size_chunking_command(args.text, args.chunk_size, args.overlap)
                 print_chunks(f"Chunking {len(args.text)} characters", chunks)

@@ -1,5 +1,9 @@
 import argparse
 
+from lib.formatting import (
+    format_hybrid_result,
+    format_rrf_result,
+)
 from lib.hybrid_search import (
     normalize_command,
     weighted_search_command,
@@ -13,6 +17,9 @@ from lib.search_utils import (
 from lib.query_enhancement import (
     ENHANCEMENTS,
     enhance_query,
+)
+from lib.reranking import (
+    rerank,
 )
 
 
@@ -34,6 +41,7 @@ def main() -> int:
     rrf_search_parser.add_argument("-k", type=int, default=DEFAULT_RRF_K, help="Higher values gives lower ranked movies more influence")
     rrf_search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     rrf_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
+    rrf_search_parser.add_argument("--rerank-method", type=str, choices=["individual"], help="Re-ranks results with LLMs")
 
     args = parser.parse_args()
 
@@ -43,20 +51,13 @@ def main() -> int:
                 query = enhance_query(args.query, args.enhance)
                 results = weighted_search_command(query, args.alpha, args.limit)
                 for i, result in enumerate(results, start=1):
-                    print(f"{i}. {result["title"]}")
-                    print(f"   Hybrid Score: {result["hybrid_score"]:.4f}")
-                    print(f"   BM25 Score: {result["bm25_score"]:.4f}, Semantic Score: {result["semantic_score"]:.4f}")
-                    print(f"   {result["document"][:100]}")
+                    print(format_hybrid_result(result, i))
             case "rrf-search":
                 query = enhance_query(args.query, args.enhance)
-                results = rrf_search_command(query, args.k, args.limit)
+                search_command = rerank(args.rerank_method)(rrf_search_command)
+                results = search_command(query, args.k, limit=args.limit)
                 for i, result in enumerate(results, start=1):
-                    bm25_rank = result["bm25_rank"] if result["bm25_rank"] is not None else "N/A"
-                    semantic_rank = result["semantic_rank"] if result["semantic_rank"] is not None else "N/A"
-                    print(f"{i}. {result["title"]}")
-                    print(f"   RRF Score: {result["rrf_score"]:.4f}")
-                    print(f"   BM25 Rank: {bm25_rank}, Semantic Rank: {semantic_rank}")
-                    print(f"   {result["document"][:100]}")
+                    print(format_rrf_result(result, i))
             case "normalize":
                 for score in normalize_command(args.numbers):
                     print(f"{score:.4f}")

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -19,6 +19,9 @@ BM25_B = 0.75
 
 DEFAULT_ALPHA = 0.5
 DEFAULT_RRF_K = 60
+
+RERANK_LIMIT_MULTIPLIER = 5
+RERANK_DELAY_SECONDS = 3
 
 class Movie(TypedDict):
     id: int
@@ -39,12 +42,14 @@ class KeywordSearchResult(TypedDict):
     id: int
     title: str
     document: str
+    rerank_score: NotRequired[int | None]
 
 class ScoredSearchResult(TypedDict):
     id: int
     title: str
     document: str
     score: float
+    rerank_score: NotRequired[int | None]
 
 class HybridSearchResult(TypedDict):
     id: int
@@ -53,6 +58,7 @@ class HybridSearchResult(TypedDict):
     hybrid_score: float
     bm25_score: float
     semantic_score: float
+    rerank_score: NotRequired[int | None]
 
 class RRFSearchResult(TypedDict):
     id: int
@@ -61,6 +67,7 @@ class RRFSearchResult(TypedDict):
     rrf_score: float
     bm25_rank: int | None
     semantic_rank: int | None
+    rerank_score: NotRequired[int | None]
 
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:
