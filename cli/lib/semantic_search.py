@@ -8,6 +8,7 @@ from .search_utils import (
     CACHE_DIR,
     DEFAULT_CHUNK_SIZE_SEMANTIC,
     DEFAULT_OVERLAP_SEMANTIC,
+    SEMANTIC_MODEL,
     MetaData,
     ChunkScore,
     Movie,
@@ -27,7 +28,7 @@ def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
     return dot_product / (norm1 * norm2)
 
 class SemanticSearch:
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    def __init__(self, model_name: str = SEMANTIC_MODEL):
         self.model = SentenceTransformer(model_name)
         self.embeddings: np.ndarray | None = None
         self.documents: list[Movie] | None = None
@@ -91,7 +92,7 @@ class SemanticSearch:
         return embedding[0]
 
 class ChunkedSemanticSearch(SemanticSearch):
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    def __init__(self, model_name: str = SEMANTIC_MODEL):
         super().__init__(model_name)
         self.chunk_embeddings: np.ndarray | None = None
         self.chunk_metadata: list[MetaData] = []

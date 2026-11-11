@@ -11,6 +11,11 @@ def _append_rerank_score(lines: list[str], rerank_score: int | None) -> None:
         lines.append(f"   Re-rank Score: {rerank_score:.1f}/10")
 
 
+def _append_cross_encoder_score(lines: list[str], cross_encoder_score: float | None) -> None:
+    if cross_encoder_score is not None:
+        lines.append(f"   Cross Encoder Score: {cross_encoder_score:.3f}")
+
+
 def _truncate_document(document: str, max_length: int = 100) -> str:
     if len(document) <= max_length:
         return document
@@ -19,12 +24,14 @@ def _truncate_document(document: str, max_length: int = 100) -> str:
 
 def format_keyword_result(result: KeywordSearchResult, rank: int) -> str:
     lines = [f"{rank}. {result['title']}"]
+    _append_cross_encoder_score(lines, result.get("cross_encoder_score"))
     _append_rerank_score(lines, result.get("rerank_score"))
     return "\n".join(lines)
 
 
 def format_scored_result(result: ScoredSearchResult, rank: int) -> str:
     lines = [f"{rank}. {result['title']}"]
+    _append_cross_encoder_score(lines, result.get("cross_encoder_score"))
     _append_rerank_score(lines, result.get("rerank_score"))
     lines.extend(
         [
@@ -37,6 +44,7 @@ def format_scored_result(result: ScoredSearchResult, rank: int) -> str:
 
 def format_hybrid_result(result: HybridSearchResult, rank: int) -> str:
     lines = [f"{rank}. {result['title']}"]
+    _append_cross_encoder_score(lines, result.get("cross_encoder_score"))
     _append_rerank_score(lines, result.get("rerank_score"))
     lines.extend(
         [
@@ -53,6 +61,7 @@ def format_rrf_result(result: RRFSearchResult, rank: int) -> str:
     semantic_rank = result["semantic_rank"] if result["semantic_rank"] is not None else "N/A"
 
     lines = [f"{rank}. {result['title']}"]
+    _append_cross_encoder_score(lines, result.get("cross_encoder_score"))
     _append_rerank_score(lines, result.get("rerank_score"))
     lines.extend(
         [

@@ -23,6 +23,9 @@ DEFAULT_RRF_K = 60
 RERANK_LIMIT_MULTIPLIER = 5
 RERANK_DELAY_SECONDS = 3
 
+SEMANTIC_MODEL = "all-MiniLM-L6-v2"
+CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-TinyBERT-L2-v2"
+
 class Movie(TypedDict):
     id: int
     title: str
@@ -43,6 +46,7 @@ class KeywordSearchResult(TypedDict):
     title: str
     document: str
     rerank_score: NotRequired[int | None]
+    cross_encoder_score: NotRequired[float | None]
 
 class ScoredSearchResult(TypedDict):
     id: int
@@ -50,6 +54,7 @@ class ScoredSearchResult(TypedDict):
     document: str
     score: float
     rerank_score: NotRequired[int | None]
+    cross_encoder_score: NotRequired[float | None]
 
 class HybridSearchResult(TypedDict):
     id: int
@@ -59,6 +64,7 @@ class HybridSearchResult(TypedDict):
     bm25_score: float
     semantic_score: float
     rerank_score: NotRequired[int | None]
+    cross_encoder_score: NotRequired[float | None]
 
 class RRFSearchResult(TypedDict):
     id: int
@@ -68,6 +74,7 @@ class RRFSearchResult(TypedDict):
     bm25_rank: int | None
     semantic_rank: int | None
     rerank_score: NotRequired[int | None]
+    cross_encoder_score: NotRequired[float | None]
 
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:

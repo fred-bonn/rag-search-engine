@@ -1,14 +1,17 @@
 import json
 from collections.abc import Callable
-from functools import wraps
+from functools import cache, wraps
 from time import sleep
 from typing import TypeVar
+
+from sentence_transformers import CrossEncoder
 
 from .query_enhancement import (
     MODEL,
     get_client,
 )
 from .search_utils import (
+    CROSS_ENCODER_MODEL,
     RERANK_DELAY_SECONDS,
     RERANK_LIMIT_MULTIPLIER,
     HybridSearchResult,
@@ -26,6 +29,11 @@ SearchResult = TypeVar(
 )
 
 Reranker = Callable[[str, list[SearchResult]], list[SearchResult]]
+
+
+@cache
+def get_cross_encoder() -> CrossEncoder:
+    return CrossEncoder(CROSS_ENCODER_MODEL)
 
 
 def rerank(
@@ -139,7 +147,25 @@ def batch_rerank(query: str, results: list[SearchResult]) -> list[SearchResult]:
     return results
 
 
+def cross_encoder_rerank(query: str, results: list[SearchResult]) -> list[SearchResult]:
+    pairs = [
+        [query, f"{doc.get('title', '')} - {doc.get('document', '')}"]
+        for doc in results
+    ]
+    scores = get_cross_encoder().predict(pairs)
+
+    scored_results: list[tuple[float, SearchResult]] = []
+    for result, score in zip(results, scores):
+        cross_encoder_score = float(score)
+        result["cross_encoder_score"] = cross_encoder_score
+        scored_results.append((cross_encoder_score, result))
+
+    scored_results.sort(key=lambda scored: scored[0], reverse=True)
+    return [result for _, result in scored_results]
+
+
 RERANKERS: dict[str, Reranker] = {
     "individual": individual_rerank,
     "batch": batch_rerank,
+    "cross_encoder": cross_encoder_rerank,
 }
