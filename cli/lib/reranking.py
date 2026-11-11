@@ -1,3 +1,4 @@
+import json
 from collections.abc import Callable
 from functools import wraps
 from time import sleep
@@ -43,15 +44,11 @@ def rerank(
         def wrapper(query: str, *args, limit: int, **kwargs) -> list[SearchResult]:
             results = search_command(query, *args, limit=limit * multiplier, **kwargs)
             assert method is not None
-            return rerank_results(query, results, method)[:limit]
+            return RERANKERS[method](query, results)[:limit]
 
         return wrapper
 
     return decorator
-
-
-def rerank_results(query: str, results: list[SearchResult], method: str) -> list[SearchResult]:
-    return RERANKERS[method](query, results)
 
 
 def individual_prompt(query: str, doc: SearchResult) -> str:
@@ -98,6 +95,51 @@ def individual_rerank(query: str, results: list[SearchResult]) -> list[SearchRes
     return [result for _, result in scored_results]
 
 
+def batch_prompt(query: str, results: list[SearchResult]) -> str:
+    doc_list_str = "".join(
+        f"  {doc['title']}: '{doc['document']}'\n"
+        for doc in results
+    )
+    return f"""Rank the movies listed below by relevance to the following search query.
+
+Query: "{query}"
+
+Movies:
+{doc_list_str}
+
+Return the movie IDs in order of relevance, best match first.
+
+Your response must be a raw JSON array of integers.
+Do not wrap the JSON in Markdown. Do not use a ```json code block.
+Do not include any explanatory text.
+
+For example:
+[75, 12, 34, 2, 1]
+
+Ranking:"""
+
+
+def batch_rerank(query: str, results: list[SearchResult]) -> list[SearchResult]:
+    response = get_client().chat.completions.create(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": batch_prompt(query, results),
+            }
+        ],
+    )
+    ranking_text = response.choices[0].message.content
+    if ranking_text is None:
+        raise RuntimeError("LLM returned an empty response")
+
+    ranked_ids = json.loads(ranking_text)
+    rank_by_id = {movie_id: rank for rank, movie_id in enumerate(ranked_ids)}
+    results.sort(key=lambda result: rank_by_id.get(result["id"], len(ranked_ids)))
+    return results
+
+
 RERANKERS: dict[str, Reranker] = {
     "individual": individual_rerank,
+    "batch": batch_rerank,
 }
