@@ -46,8 +46,9 @@ def calculate_metrics(relevant_docs: list[str], results: list[RRFSearchResult]) 
 
     precision = relevant_retrieved / len(retrieved) if retrieved else 0.0
     recall = relevant_retrieved / len(relevant) if relevant else 0.0
+    f1 = 2 * (precision * recall) / (precision + recall) if precision + recall else 0.0
 
-    return EvaluationMetrics(precision=precision, recall=recall)
+    return EvaluationMetrics(precision=precision, recall=recall, f1=f1)
 
 
 def main() -> int:
@@ -77,6 +78,7 @@ def main() -> int:
         print(f"- Query: {test_case['query']}")
         print(f"  - Precision@{limit}: {metrics['precision']:.4f}")
         print(f"  - Recall@{limit}: {metrics['recall']:.4f}")
+        print(f"  - F1 Score: {metrics['f1']:.4f}")
         print(f"  - Retrieved: {', '.join(retrieved)}")
         print(f"  - Relevant: {', '.join(test_case['relevant_docs'])}")
         print()

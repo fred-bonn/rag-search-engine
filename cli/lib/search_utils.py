@@ -84,6 +84,7 @@ class TestCase(TypedDict):
 class EvaluationMetrics(TypedDict):
     precision: float
     recall: float
+    f1: float
 
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:
