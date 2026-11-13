@@ -8,6 +8,9 @@ DATA_PATH = PROJECT_ROOT / "data" / "movies.json"
 STOPWORDS_PATH = PROJECT_ROOT / "data" / "stopwords.txt"
 GOLDEN_DATASET_PATH = PROJECT_ROOT / "data" / "golden_dataset.json"
 CACHE_DIR = PROJECT_ROOT / "cache"
+LOG_DIR = PROJECT_ROOT / "logs"
+SEARCH_LOG_PATH = LOG_DIR / "search.jsonl"
+SEARCH_LOG_SCHEMA_VERSION = 1
 
 DEFAULT_SEARCH_LIMIT = 5
 DEFAULT_CHUNK_SIZE = 200
@@ -85,6 +88,20 @@ class EvaluationMetrics(TypedDict):
     precision: float
     recall: float
     f1: float
+
+class LoggedResult(TypedDict):
+    rank: int
+    id: int
+    title: str
+    score: NotRequired[float]
+    hybrid_score: NotRequired[float]
+    bm25_score: NotRequired[float]
+    semantic_score: NotRequired[float]
+    rrf_score: NotRequired[float]
+    bm25_rank: NotRequired[int | None]
+    semantic_rank: NotRequired[int | None]
+    rerank_score: NotRequired[int | None]
+    cross_encoder_score: NotRequired[float | None]
 
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:

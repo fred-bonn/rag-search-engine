@@ -1,6 +1,6 @@
 import json
 from collections.abc import Callable
-from functools import cache, wraps
+from functools import cache
 from time import sleep
 from typing import TypeVar
 
@@ -13,7 +13,6 @@ from .query_enhancement import (
 from .search_utils import (
     CROSS_ENCODER_MODEL,
     RERANK_DELAY_SECONDS,
-    RERANK_LIMIT_MULTIPLIER,
     HybridSearchResult,
     KeywordSearchResult,
     RRFSearchResult,
@@ -34,29 +33,6 @@ Reranker = Callable[[str, list[SearchResult]], list[SearchResult]]
 @cache
 def get_cross_encoder() -> CrossEncoder:
     return CrossEncoder(CROSS_ENCODER_MODEL)
-
-
-def rerank(
-    method: str | None,
-    multiplier: int = RERANK_LIMIT_MULTIPLIER,
-) -> Callable[..., Callable[..., list[SearchResult]]]:
-    """Wrap a search command so it over-fetches results, reranks them, and truncates to the requested limit."""
-
-    def decorator(
-        search_command: Callable[..., list[SearchResult]],
-    ) -> Callable[..., list[SearchResult]]:
-        if method is None:
-            return search_command
-
-        @wraps(search_command)
-        def wrapper(query: str, *args, limit: int, **kwargs) -> list[SearchResult]:
-            results = search_command(query, *args, limit=limit * multiplier, **kwargs)
-            assert method is not None
-            return RERANKERS[method](query, results)[:limit]
-
-        return wrapper
-
-    return decorator
 
 
 def individual_prompt(query: str, doc: SearchResult) -> str:

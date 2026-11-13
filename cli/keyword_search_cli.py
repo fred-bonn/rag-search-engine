@@ -21,12 +21,11 @@ from lib.search_utils import (
 )
 from lib.query_enhancement import (
     ENHANCEMENTS,
-    enhance_query,
 )
 from lib.reranking import (
     RERANKERS,
-    rerank,
 )
+from lib.search_runner import run_search_pipeline
 
 
 def main() -> int:
@@ -80,17 +79,27 @@ def main() -> int:
                 build_command()
                 print("Inverted index built successfully.")
             case "search":
-                query = enhance_query(args.query, args.enhance)
-                print(f"Searching for: {query}")
-                search = rerank(args.rerank_method)(search_command)
-                results = search(query, limit=args.limit)
+                results = run_search_pipeline(
+                    search_command,
+                    query=args.query,
+                    engine="keyword",
+                    search_type="search",
+                    limit=args.limit,
+                    enhancement=args.enhance,
+                    rerank_method=args.rerank_method,
+                )
                 for i, result in enumerate(results, start=1):
                     print(format_keyword_result(result, i))
             case "bm25search":
-                query = enhance_query(args.query, args.enhance)
-                print(f"Searching for: {query}")
-                search = rerank(args.rerank_method)(bm25_search_command)
-                results = search(query, limit=args.limit)
+                results = run_search_pipeline(
+                    bm25_search_command,
+                    query=args.query,
+                    engine="keyword",
+                    search_type="bm25search",
+                    limit=args.limit,
+                    enhancement=args.enhance,
+                    rerank_method=args.rerank_method,
+                )
                 for i, result in enumerate(results, start=1):
                     print(format_scored_result(result, i))
             case "tf":

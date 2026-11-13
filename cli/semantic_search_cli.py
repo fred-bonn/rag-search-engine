@@ -22,12 +22,11 @@ from lib.search_utils import (
 )
 from lib.query_enhancement import (
     ENHANCEMENTS,
-    enhance_query,
 )
 from lib.reranking import (
     RERANKERS,
-    rerank,
 )
+from lib.search_runner import run_search_pipeline
 
 
 def print_chunks(header: str, chunks: list[str]) -> None:
@@ -97,15 +96,27 @@ def main() -> int:
                 print(f"Number of docs:   {embeddings.shape[0]}")
                 print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
             case "search":
-                query = enhance_query(args.query, args.enhance)
-                search = rerank(args.rerank_method)(semantic_search_command)
-                results = search(query, limit=args.limit)
+                results = run_search_pipeline(
+                    semantic_search_command,
+                    query=args.query,
+                    engine="semantic",
+                    search_type="search",
+                    limit=args.limit,
+                    enhancement=args.enhance,
+                    rerank_method=args.rerank_method,
+                )
                 for rank, result in enumerate(results, start=1):
                     print(format_scored_result(result, rank))
             case "search_chunked":
-                query = enhance_query(args.query, args.enhance)
-                search = rerank(args.rerank_method)(search_chunked_command)
-                results = search(query, limit=args.limit)
+                results = run_search_pipeline(
+                    search_chunked_command,
+                    query=args.query,
+                    engine="semantic",
+                    search_type="search_chunked",
+                    limit=args.limit,
+                    enhancement=args.enhance,
+                    rerank_method=args.rerank_method,
+                )
                 for rank, result in enumerate(results, start=1):
                     print(format_scored_result(result, rank))
             case "chunk":

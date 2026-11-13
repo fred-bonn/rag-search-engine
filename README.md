@@ -111,6 +111,35 @@ The search commands share a few flags:
 - `--rerank-method {individual,batch,cross_encoder}` — over-fetch results and re-rank them.
   `individual` and `batch` call the LLM; `cross_encoder` runs a local cross-encoder model.
 
+## Search logs
+
+Every interactive search appends structured events to `logs/search.jsonl` (gitignored), one JSON
+object per line. Each search writes a `search` event with the original query, engine, search type,
+enhancement details, and the results before re-ranking; when a re-rank method is used, a matching
+`rerank` event follows, correlated by `search_id`. Failures write an `error` event instead. Results
+are logged with `id`, `title`, and scores only — look up descriptions in `data/movies.json`.
+
+```json
+{"schema_version":1,"timestamp":"2026-11-13T21:47:12.481Z","event":"search","search_id":"8f14e45f","query":"scary bear movie","engine":"hybrid","search_type":"rrf_search","enhancement":"expand","enhanced_query":"scary horror grizzly bear movie","limit":5,"params":{"k":60},"results":[{"rank":1,"id":12,"title":"Grizzly","rrf_score":0.0328,"bm25_rank":3,"semantic_rank":1}]}
+```
+
+Engine values are `keyword`, `semantic`, and `hybrid`; search types are `search`, `bm25search`,
+`search_chunked`, `weighted_search`, and `rrf_search`. With re-ranking, the `search` event contains
+the over-fetched pool (up to `limit * 5` results), matching what the reranker saw.
+
+Since logs are JSONL, `jq` makes them human-readable:
+
+```sh
+# One line per search: engine/type, query, and result titles
+jq -r 'select(.event=="search") | "\(.timestamp) [\(.engine)/\(.search_type)] \(.query) -> \(.results|map(.title)|join(", "))"' logs/search.jsonl
+
+# All events for the most recent search
+last_id=$(jq -r 'select(.event=="search") | .search_id' logs/search.jsonl | tail -1)
+jq -c --arg id "$last_id" 'select(.search_id == $id)' logs/search.jsonl
+```
+
+The evaluation CLI does not write logs.
+
 ## Project layout
 
 ```text
@@ -126,7 +155,10 @@ cli/
     query_enhancement.py  # LLM query rewriting
     reranking.py          # LLM and cross-encoder rerankers
     formatting.py         # CLI result formatting
+    search_logging.py     # JSONL search log writer
+    search_runner.py      # enhance/search/rerank pipeline with logging
     search_utils.py       # paths, defaults, and shared types
 data/                     # movies.json + stopwords.txt (not tracked)
 cache/                    # generated indexes and embeddings (not tracked)
+logs/                     # search.jsonl event log (not tracked)
 ```

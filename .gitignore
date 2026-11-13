@@ -12,5 +12,6 @@ wheels/
 # Other
 data/
 cache/
+logs/
 .env
 .vscode/

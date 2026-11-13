@@ -16,12 +16,11 @@ from lib.search_utils import (
 )
 from lib.query_enhancement import (
     ENHANCEMENTS,
-    enhance_query,
 )
 from lib.reranking import (
     RERANKERS,
-    rerank,
 )
+from lib.search_runner import run_search_pipeline
 
 
 def main() -> int:
@@ -50,15 +49,29 @@ def main() -> int:
     try:
         match args.command:
             case "weighted-search":
-                query = enhance_query(args.query, args.enhance)
-                search = rerank(args.rerank_method)(weighted_search_command)
-                results = search(query, args.alpha, limit=args.limit)
+                results = run_search_pipeline(
+                    weighted_search_command,
+                    query=args.query,
+                    engine="hybrid",
+                    search_type="weighted_search",
+                    limit=args.limit,
+                    enhancement=args.enhance,
+                    rerank_method=args.rerank_method,
+                    command_kwargs={"alpha": args.alpha},
+                )
                 for i, result in enumerate(results, start=1):
                     print(format_hybrid_result(result, i))
             case "rrf-search":
-                query = enhance_query(args.query, args.enhance)
-                search = rerank(args.rerank_method)(rrf_search_command)
-                results = search(query, args.k, limit=args.limit)
+                results = run_search_pipeline(
+                    rrf_search_command,
+                    query=args.query,
+                    engine="hybrid",
+                    search_type="rrf_search",
+                    limit=args.limit,
+                    enhancement=args.enhance,
+                    rerank_method=args.rerank_method,
+                    command_kwargs={"k": args.k},
+                )
                 for i, result in enumerate(results, start=1):
                     print(format_rrf_result(result, i))
             case "normalize":
