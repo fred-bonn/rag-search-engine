@@ -1,6 +1,7 @@
 import argparse
 
 from lib.formatting import (
+    format_relevance_report,
     format_scored_result,
 )
 from lib.semantic_search import (
@@ -26,6 +27,7 @@ from lib.query_enhancement import (
 from lib.reranking import (
     RERANKERS,
 )
+from lib.search_evaluation import evaluate_relevance
 from lib.search_runner import run_search_pipeline
 
 
@@ -56,12 +58,14 @@ def main() -> int:
     search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
     search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
+    search_parser.add_argument("--evaluate", action="store_true", help="Rate each result's relevance with an LLM (0-3)")
 
     search_chunked_parser = subparsers.add_parser("search_chunked", help="Search movies by chunk semantic similarity")
     search_chunked_parser.add_argument("query", type=str, help="Search query")
     search_chunked_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     search_chunked_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
     search_chunked_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
+    search_chunked_parser.add_argument("--evaluate", action="store_true", help="Rate each result's relevance with an LLM (0-3)")
 
     chunk_parser = subparsers.add_parser("chunk", help="Chunk a text into smaller pieces")
     chunk_parser.add_argument("text", type=str, help="Text to chunk")
@@ -107,6 +111,10 @@ def main() -> int:
                 )
                 for rank, result in enumerate(results, start=1):
                     print(format_scored_result(result, rank))
+                if args.evaluate:
+                    scores = evaluate_relevance(args.query, results)
+                    print()
+                    print(format_relevance_report(results, scores))
             case "search_chunked":
                 results = run_search_pipeline(
                     search_chunked_command,
@@ -119,6 +127,10 @@ def main() -> int:
                 )
                 for rank, result in enumerate(results, start=1):
                     print(format_scored_result(result, rank))
+                if args.evaluate:
+                    scores = evaluate_relevance(args.query, results)
+                    print()
+                    print(format_relevance_report(results, scores))
             case "chunk":
                 chunks = fixed_size_chunking_command(args.text, args.chunk_size, args.overlap)
                 print_chunks(f"Chunking {len(args.text)} characters", chunks)

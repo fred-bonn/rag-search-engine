@@ -110,6 +110,8 @@ The search commands share a few flags:
 - `--enhance {spell,rewrite,expand}` — enhance the query with an LLM before searching.
 - `--rerank-method {individual,batch,cross_encoder}` — over-fetch results and re-rank them.
   `individual` and `batch` call the LLM; `cross_encoder` runs a local cross-encoder model.
+- `--evaluate` — after printing results, ask the LLM to rate each one from `0` (not relevant) to
+  `3` (highly relevant) against the original query.
 
 ## Search logs
 
@@ -155,6 +157,7 @@ cli/
     query_enhancement.py  # LLM query rewriting
     reranking.py          # LLM and cross-encoder rerankers
     formatting.py         # CLI result formatting
+    search_evaluation.py  # LLM relevance scoring
     search_logging.py     # JSONL search log writer
     search_runner.py      # enhance/search/rerank pipeline with logging
     search_utils.py       # paths, defaults, and shared types

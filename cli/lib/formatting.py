@@ -1,3 +1,6 @@
+from collections.abc import Mapping, Sequence
+from typing import Any
+
 from .search_utils import (
     HybridSearchResult,
     KeywordSearchResult,
@@ -71,3 +74,13 @@ def format_rrf_result(result: RRFSearchResult, rank: int) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def format_relevance_report(
+    results: Sequence[Mapping[str, Any]],
+    scores: Sequence[int],
+) -> str:
+    return "\n".join(
+        f"{rank}. {result['title']}: {score}/3"
+        for rank, (result, score) in enumerate(zip(results, scores), start=1)
+    )

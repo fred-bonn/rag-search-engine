@@ -2,6 +2,7 @@ import argparse
 
 from lib.formatting import (
     format_hybrid_result,
+    format_relevance_report,
     format_rrf_result,
 )
 from lib.hybrid_search import (
@@ -20,6 +21,7 @@ from lib.query_enhancement import (
 from lib.reranking import (
     RERANKERS,
 )
+from lib.search_evaluation import evaluate_relevance
 from lib.search_runner import run_search_pipeline
 
 
@@ -36,6 +38,7 @@ def main() -> int:
     weighted_search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     weighted_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
     weighted_search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
+    weighted_search_parser.add_argument("--evaluate", action="store_true", help="Rate each result's relevance with an LLM (0-3)")
 
     rrf_search_parser = subparsers.add_parser("rrf-search", help="Search movies using RRF search")
     rrf_search_parser.add_argument("query", type=str, help="Search query")
@@ -43,6 +46,7 @@ def main() -> int:
     rrf_search_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
     rrf_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
     rrf_search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
+    rrf_search_parser.add_argument("--evaluate", action="store_true", help="Rate each result's relevance with an LLM (0-3)")
 
     args = parser.parse_args()
 
@@ -61,6 +65,10 @@ def main() -> int:
                 )
                 for i, result in enumerate(results, start=1):
                     print(format_hybrid_result(result, i))
+                if args.evaluate:
+                    scores = evaluate_relevance(args.query, results)
+                    print()
+                    print(format_relevance_report(results, scores))
             case "rrf-search":
                 results = run_search_pipeline(
                     rrf_search_command,
@@ -74,6 +82,10 @@ def main() -> int:
                 )
                 for i, result in enumerate(results, start=1):
                     print(format_rrf_result(result, i))
+                if args.evaluate:
+                    scores = evaluate_relevance(args.query, results)
+                    print()
+                    print(format_relevance_report(results, scores))
             case "normalize":
                 for score in normalize_command(args.numbers):
                     print(f"{score:.4f}")

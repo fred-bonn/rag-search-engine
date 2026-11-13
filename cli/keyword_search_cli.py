@@ -2,6 +2,7 @@ import argparse
 
 from lib.formatting import (
     format_keyword_result,
+    format_relevance_report,
     format_scored_result,
 )
 from lib.keyword_search import (
@@ -25,6 +26,7 @@ from lib.query_enhancement import (
 from lib.reranking import (
     RERANKERS,
 )
+from lib.search_evaluation import evaluate_relevance
 from lib.search_runner import run_search_pipeline
 
 
@@ -39,6 +41,7 @@ def main() -> int:
     )
     search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
     search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
+    search_parser.add_argument("--evaluate", action="store_true", help="Rate each result's relevance with an LLM (0-3)")
 
     subparsers.add_parser("build", help="Build the inverted index")
 
@@ -69,6 +72,7 @@ def main() -> int:
     )
     bm25_search_parser.add_argument("--enhance", type=str, choices=list(ENHANCEMENTS), help="Query enhancement method")
     bm25_search_parser.add_argument("--rerank-method", type=str, choices=list(RERANKERS), help="Re-ranks results with LLMs")
+    bm25_search_parser.add_argument("--evaluate", action="store_true", help="Rate each result's relevance with an LLM (0-3)")
 
     args = parser.parse_args()
 
@@ -90,6 +94,10 @@ def main() -> int:
                 )
                 for i, result in enumerate(results, start=1):
                     print(format_keyword_result(result, i))
+                if args.evaluate:
+                    scores = evaluate_relevance(args.query, results)
+                    print()
+                    print(format_relevance_report(results, scores))
             case "bm25search":
                 results = run_search_pipeline(
                     bm25_search_command,
@@ -102,6 +110,10 @@ def main() -> int:
                 )
                 for i, result in enumerate(results, start=1):
                     print(format_scored_result(result, i))
+                if args.evaluate:
+                    scores = evaluate_relevance(args.query, results)
+                    print()
+                    print(format_relevance_report(results, scores))
             case "tf":
                 tf = tf_command(args.doc_id, args.term)
                 print(f"Term frequency for '{args.term}' in document {args.doc_id}: {tf}")
