@@ -6,6 +6,7 @@ from typing import NotRequired, TypedDict
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_PATH = PROJECT_ROOT / "data" / "movies.json"
 STOPWORDS_PATH = PROJECT_ROOT / "data" / "stopwords.txt"
+GOLDEN_DATASET_PATH = PROJECT_ROOT / "data" / "golden_dataset.json"
 CACHE_DIR = PROJECT_ROOT / "cache"
 
 DEFAULT_SEARCH_LIMIT = 5
@@ -75,6 +76,14 @@ class RRFSearchResult(TypedDict):
     semantic_rank: int | None
     rerank_score: NotRequired[int | None]
     cross_encoder_score: NotRequired[float | None]
+
+class TestCase(TypedDict):
+    query: str
+    relevant_docs: list[str]
+
+class EvaluationMetrics(TypedDict):
+    precision: float
+    recall: float
 
 def load_movies() -> dict[int, Movie]:
     with DATA_PATH.open("r") as f:

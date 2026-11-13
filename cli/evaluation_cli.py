@@ -1,23 +1,15 @@
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import TypedDict
 
 from lib.hybrid_search import HybridSearch
 from lib.search_utils import (
     DEFAULT_RRF_K,
+    GOLDEN_DATASET_PATH,
+    EvaluationMetrics,
     RRFSearchResult,
+    TestCase,
 )
-
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-GOLDEN_DATASET_PATH = PROJECT_ROOT / "data" / "golden_dataset.json"
-
-
-class TestCase(TypedDict):
-    query: str
-    relevant_docs: list[str]
 
 
 def load_golden_dataset() -> list[TestCase]:
@@ -47,14 +39,15 @@ def run_rrf_searches(test_cases: list[TestCase], limit: int) -> list[tuple[TestC
     ]
 
 
-def precision_at_k(relevant_docs: list[str], results: list[RRFSearchResult]) -> float:
-    if not results:
-        return 0.0
-
+def calculate_metrics(relevant_docs: list[str], results: list[RRFSearchResult]) -> EvaluationMetrics:
     relevant = set(relevant_docs)
     retrieved = [result["title"] for result in results]
     relevant_retrieved = sum(1 for title in retrieved if title in relevant)
-    return relevant_retrieved / len(retrieved)
+
+    precision = relevant_retrieved / len(retrieved) if retrieved else 0.0
+    recall = relevant_retrieved / len(relevant) if relevant else 0.0
+
+    return EvaluationMetrics(precision=precision, recall=recall)
 
 
 def main() -> int:
@@ -80,9 +73,10 @@ def main() -> int:
 
     for test_case, results in run_rrf_searches(test_cases, limit):
         retrieved = [result["title"] for result in results]
-        precision = precision_at_k(test_case["relevant_docs"], results)
+        metrics = calculate_metrics(test_case["relevant_docs"], results)
         print(f"- Query: {test_case['query']}")
-        print(f"  - Precision@{limit}: {precision:.4f}")
+        print(f"  - Precision@{limit}: {metrics['precision']:.4f}")
+        print(f"  - Recall@{limit}: {metrics['recall']:.4f}")
         print(f"  - Retrieved: {', '.join(retrieved)}")
         print(f"  - Relevant: {', '.join(test_case['relevant_docs'])}")
         print()
