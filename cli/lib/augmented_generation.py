@@ -38,3 +38,39 @@ def generate_rag_response(query: str, results: Sequence[Mapping[str, Any]]) -> s
     if answer is None:
         raise RuntimeError("LLM returned an empty response")
     return answer.strip()
+
+
+def summarize_prompt(query: str, results: Sequence[Mapping[str, Any]]) -> str:
+    docs = "\n".join(
+        f"{rank}. {result['title']}: {result['document']}"
+        for rank, result in enumerate(results, start=1)
+    )
+    return f"""Provide information useful to the query below by synthesizing data from multiple search results in detail.
+
+The goal is to provide comprehensive information so that users know what their options are.
+Your response should be information-dense and concise, with several key pieces of information about the genre, plot, etc. of each movie.
+
+This should be tailored to Webflyx users. Webflyx is a movie streaming service.
+
+Query: {query}
+
+Search results:
+{docs}
+
+Provide a comprehensive 3–4 sentence answer that combines information from multiple sources:"""
+
+
+def generate_summarize_response(query: str, results: Sequence[Mapping[str, Any]]) -> str:
+    response = get_client().chat.completions.create(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": summarize_prompt(query, results),
+            }
+        ],
+    )
+    answer = response.choices[0].message.content
+    if answer is None:
+        raise RuntimeError("LLM returned an empty response")
+    return answer.strip()

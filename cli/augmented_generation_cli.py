@@ -2,6 +2,7 @@ import argparse
 
 from lib.augmented_generation import (
     generate_rag_response,
+    generate_summarize_response,
 )
 from lib.formatting import (
     format_rag_response,
@@ -23,6 +24,12 @@ def main() -> None:
     )
     rag_parser.add_argument("query", type=str, help="Search query for RAG")
 
+    summarize_parser = subparsers.add_parser(
+        "summarize", help="Summarize the results of a search"
+    )
+    summarize_parser.add_argument("query", type=str, help="Search query for summarize")
+    summarize_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+
     args = parser.parse_args()
 
     match args.command:
@@ -34,6 +41,15 @@ def main() -> None:
                 command_kwargs={"k": DEFAULT_RRF_K},
             )
             answer = generate_rag_response(args.query, results)
+            print(format_rag_response(results, answer))
+        case "summarize":
+            results = run_search_pipeline(
+                "rrf",
+                query=args.query,
+                limit=args.limit,
+                command_kwargs={"k": DEFAULT_RRF_K},
+            )
+            answer = generate_summarize_response(args.query, results)
             print(format_rag_response(results, answer))
         case _:
             parser.print_help()
