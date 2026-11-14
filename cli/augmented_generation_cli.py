@@ -2,6 +2,7 @@ import argparse
 
 from lib.augmented_generation import (
     generate_citations_response,
+    generate_question_response,
     generate_rag_response,
     generate_summarize_response,
 )
@@ -37,6 +38,12 @@ def main() -> None:
     citations_parser.add_argument("query", type=str, help="Search query for citations")
     citations_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
 
+    question_parser = subparsers.add_parser(
+        "question", help="Answer a question using search results"
+    )
+    question_parser.add_argument("question", type=str, help="Question to answer")
+    question_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+
     args = parser.parse_args()
 
     match args.command:
@@ -66,6 +73,15 @@ def main() -> None:
                 command_kwargs={"k": DEFAULT_RRF_K},
             )
             answer = generate_citations_response(args.query, results)
+            print(format_LLM_answer(results, answer))
+        case "question":
+            results = run_search_pipeline(
+                "rrf",
+                query=args.question,
+                limit=args.limit,
+                command_kwargs={"k": DEFAULT_RRF_K},
+            )
+            answer = generate_question_response(args.question, results)
             print(format_LLM_answer(results, answer))
         case _:
             parser.print_help()

@@ -115,3 +115,40 @@ def generate_citations_response(query: str, results: Sequence[Mapping[str, Any]]
     if answer is None:
         raise RuntimeError("LLM returned an empty response")
     return answer.strip()
+
+
+def question_prompt(question: str, results: Sequence[Mapping[str, Any]]) -> str:
+    docs = "\n".join(
+        f"{rank}. {result['title']}: {result['document']}"
+        for rank, result in enumerate(results, start=1)
+    )
+    return f"""Answer the user's question based on the provided movies that are available on Webflyx, a streaming service.
+
+Question: {question}
+
+Documents:
+{docs}
+
+Instructions:
+- Answer questions directly and concisely
+- Be casual and conversational
+- Don't be cringe or hype-y
+- Talk like a normal person would in a chat conversation
+
+Answer:"""
+
+
+def generate_question_response(question: str, results: Sequence[Mapping[str, Any]]) -> str:
+    response = get_client().chat.completions.create(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": question_prompt(question, results),
+            }
+        ],
+    )
+    answer = response.choices[0].message.content
+    if answer is None:
+        raise RuntimeError("LLM returned an empty response")
+    return answer.strip()
