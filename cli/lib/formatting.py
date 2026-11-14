@@ -84,3 +84,15 @@ def format_relevance_report(
         f"{rank}. {result['title']}: {score}/3"
         for rank, (result, score) in enumerate(zip(results, scores), start=1)
     )
+
+
+def format_rag_response(
+    results: Sequence[Mapping[str, Any]],
+    answer: str,
+) -> str:
+    search_results = "\n".join(f"- {result['title']}" for result in results)
+    return f"""Search Results:
+{search_results}
+
+RAG Response:
+{answer}"""
