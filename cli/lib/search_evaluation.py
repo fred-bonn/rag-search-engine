@@ -2,7 +2,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from .query_enhancement import (
+from .llm_client import (
     MODEL,
     get_client,
 )

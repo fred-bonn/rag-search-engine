@@ -1,7 +1,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
-from .query_enhancement import (
+from .llm_client import (
     MODEL,
     get_client,
 )

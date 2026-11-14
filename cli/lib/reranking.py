@@ -6,7 +6,7 @@ from typing import TypeVar
 
 from sentence_transformers import CrossEncoder
 
-from .query_enhancement import (
+from .llm_client import (
     MODEL,
     get_client,
 )
