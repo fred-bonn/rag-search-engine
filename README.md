@@ -93,15 +93,6 @@ uv run python cli/hybrid_search_cli.py normalize 1 2 3 4
 Hybrid search needs the keyword index built first (`build` in the keyword CLI); chunk embeddings are
 created on demand.
 
-### `cli/test_llm.py` — OpenRouter smoke test
-
-Sends a single prompt to the configured LLM and prints the response plus token usage. Useful for
-confirming that `OPENROUTER_API_KEY` works before using `--enhance` or `--rerank-method`.
-
-```sh
-uv run python cli/test_llm.py
-```
-
 ## Common options
 
 The search commands share a few flags:
@@ -149,7 +140,6 @@ cli/
   keyword_search_cli.py   # keyword/BM25 CLI
   semantic_search_cli.py  # embeddings/chunking CLI
   hybrid_search_cli.py    # hybrid fusion CLI
-  test_llm.py             # OpenRouter connectivity check
   lib/
     keyword_search.py     # inverted index, TF-IDF, BM25
     semantic_search.py    # embeddings, cosine similarity, chunking
