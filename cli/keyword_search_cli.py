@@ -9,8 +9,6 @@ from lib.keyword_search import (
     BM25_K1,
     BM25_B,
     build_command,
-    search_command,
-    bm25_search_command,
     tf_command,
     idf_command,
     tf_idf_command,
@@ -84,10 +82,8 @@ def main() -> int:
                 print("Inverted index built successfully.")
             case "search":
                 results = run_search_pipeline(
-                    search_command,
+                    "keyword",
                     query=args.query,
-                    engine="keyword",
-                    search_type="search",
                     limit=args.limit,
                     enhancement=args.enhance,
                     rerank_method=args.rerank_method,
@@ -100,10 +96,8 @@ def main() -> int:
                     print(format_relevance_report(results, scores))
             case "bm25search":
                 results = run_search_pipeline(
-                    bm25_search_command,
+                    "bm25",
                     query=args.query,
-                    engine="keyword",
-                    search_type="bm25search",
                     limit=args.limit,
                     enhancement=args.enhance,
                     rerank_method=args.rerank_method,

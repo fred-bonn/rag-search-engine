@@ -6,9 +6,6 @@ from lib.augmented_generation import (
 from lib.formatting import (
     format_rag_response,
 )
-from lib.hybrid_search import (
-    rrf_search_command,
-)
 from lib.search_utils import (
     DEFAULT_RRF_K,
     DEFAULT_SEARCH_LIMIT,
@@ -31,10 +28,8 @@ def main() -> None:
     match args.command:
         case "rag":
             results = run_search_pipeline(
-                rrf_search_command,
+                "rrf",
                 query=args.query,
-                engine="hybrid",
-                search_type="rrf_search",
                 limit=DEFAULT_SEARCH_LIMIT,
                 command_kwargs={"k": DEFAULT_RRF_K},
             )

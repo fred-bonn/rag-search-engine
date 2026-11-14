@@ -10,8 +10,6 @@ from lib.semantic_search import (
     embed_query_text_command,
     verify_embeddings_command,
     embed_chunks_command,
-    semantic_search_command,
-    search_chunked_command,
     fixed_size_chunking_command,
     semantic_chunking_command,
 )
@@ -101,10 +99,8 @@ def main() -> int:
                 print(f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
             case "search":
                 results = run_search_pipeline(
-                    semantic_search_command,
+                    "semantic",
                     query=args.query,
-                    engine="semantic",
-                    search_type="search",
                     limit=args.limit,
                     enhancement=args.enhance,
                     rerank_method=args.rerank_method,
@@ -117,10 +113,8 @@ def main() -> int:
                     print(format_relevance_report(results, scores))
             case "search_chunked":
                 results = run_search_pipeline(
-                    search_chunked_command,
+                    "semantic_chunked",
                     query=args.query,
-                    engine="semantic",
-                    search_type="search_chunked",
                     limit=args.limit,
                     enhancement=args.enhance,
                     rerank_method=args.rerank_method,

@@ -7,8 +7,6 @@ from lib.formatting import (
 )
 from lib.hybrid_search import (
     normalize_command,
-    weighted_search_command,
-    rrf_search_command,
 )
 from lib.search_utils import (
     DEFAULT_ALPHA,
@@ -54,10 +52,8 @@ def main() -> int:
         match args.command:
             case "weighted-search":
                 results = run_search_pipeline(
-                    weighted_search_command,
+                    "weighted",
                     query=args.query,
-                    engine="hybrid",
-                    search_type="weighted_search",
                     limit=args.limit,
                     enhancement=args.enhance,
                     rerank_method=args.rerank_method,
@@ -71,10 +67,8 @@ def main() -> int:
                     print(format_relevance_report(results, scores))
             case "rrf-search":
                 results = run_search_pipeline(
-                    rrf_search_command,
+                    "rrf",
                     query=args.query,
-                    engine="hybrid",
-                    search_type="rrf_search",
                     limit=args.limit,
                     enhancement=args.enhance,
                     rerank_method=args.rerank_method,
