@@ -1,8 +1,8 @@
 # rag-search-engine
 
 A small playground for learning how retrieval-augmented generation (RAG) works, built around a
-movie dataset. It implements the retrieval half of RAG from scratch and compares the tradeoffs
-between the common approaches:
+movie dataset. It implements the retrieval and generation pieces of RAG from scratch and compares
+the tradeoffs between the common approaches:
 
 - **Keyword search** — an inverted index with TF, IDF, TF-IDF, and BM25 scoring.
 - **Semantic search** — sentence-transformer embeddings with cosine similarity, on whole documents
@@ -11,6 +11,8 @@ between the common approaches:
   semantic results.
 - **Query enhancement** — LLM-based spelling correction, rewriting, and expansion.
 - **Re-ranking** — LLM scoring (individual or batched) and cross-encoder re-ranking.
+- **Answer generation** — RAG answers, summaries, cited responses, and conversational Q&A grounded
+  in retrieved documents.
 
 Each stage is exposed through a CLI so you can poke at scores, compare result sets, and see how
 changes to the pipeline affect ranking. Indexes and embeddings are cached under `cache/` so repeated
@@ -93,6 +95,35 @@ uv run python cli/hybrid_search_cli.py normalize 1 2 3 4
 Hybrid search needs the keyword index built first (`build` in the keyword CLI); chunk embeddings are
 created on demand.
 
+### `cli/evaluation_cli.py` — retrieval evaluation
+
+```sh
+uv run python cli/evaluation_cli.py --limit 5
+```
+
+Runs every query in `data/golden_dataset.json` through RRF search and reports precision@k,
+recall@k, and F1 for the retrieved titles.
+
+### `cli/augmented_generation_cli.py` — answer generation
+
+```sh
+uv run python cli/augmented_generation_cli.py rag "a movie about grief"
+uv run python cli/augmented_generation_cli.py summarize "dinosaur movies" --limit 3
+uv run python cli/augmented_generation_cli.py citations "dinosaur movies" --limit 3
+uv run python cli/augmented_generation_cli.py question "Which dinosaur movie is best?"
+```
+
+| Command | Description |
+| --- | --- |
+| `rag` | Answer a query using the top RRF results |
+| `summarize` | Synthesize an information-dense summary across multiple results |
+| `citations` | Answer with numbered `[1]`, `[2]`, etc. source citations |
+| `question` | Answer a conversational question using the retrieved movies |
+
+These commands run an RRF hybrid search and pass the results to the LLM. `summarize`, `citations`,
+and `question` accept `--limit`; `rag` always uses the default limit. They require
+`OPENROUTER_API_KEY`.
+
 ## Common options
 
 The search commands share a few flags:
@@ -117,7 +148,7 @@ are logged with `id`, `title`, and scores only — look up descriptions in `data
 ```
 
 Engine values are `keyword`, `semantic`, and `hybrid`; search types are `search`, `bm25search`,
-`search_chunked`, `weighted_search`, and `rrf_search`. With re-ranking, the `search` event contains
+`chunked_search`, `weighted_search`, and `rrf_search`. With re-ranking, the `search` event contains
 the over-fetched pool (up to `limit * 5` results), matching what the reranker saw.
 
 Since logs are JSONL, `jq` makes them human-readable:
@@ -137,21 +168,25 @@ The evaluation CLI does not write logs.
 
 ```text
 cli/
-  keyword_search_cli.py   # keyword/BM25 CLI
-  semantic_search_cli.py  # embeddings/chunking CLI
-  hybrid_search_cli.py    # hybrid fusion CLI
+  keyword_search_cli.py       # keyword/BM25 CLI
+  semantic_search_cli.py      # embeddings/chunking CLI
+  hybrid_search_cli.py        # hybrid fusion CLI
+  evaluation_cli.py           # retrieval evaluation CLI
+  augmented_generation_cli.py # RAG answer generation CLI
   lib/
-    keyword_search.py     # inverted index, TF-IDF, BM25
-    semantic_search.py    # embeddings, cosine similarity, chunking
-    hybrid_search.py      # normalization, weighted fusion, RRF
-    query_enhancement.py  # LLM query rewriting
-    reranking.py          # LLM and cross-encoder rerankers
-    formatting.py         # CLI result formatting
-    search_evaluation.py  # LLM relevance scoring
-    search_logging.py     # JSONL search log writer
-    search_runner.py      # enhance/search/rerank pipeline with logging
-    search_utils.py       # paths, defaults, and shared types
-data/                     # movies.json + stopwords.txt (not tracked)
-cache/                    # generated indexes and embeddings (not tracked)
-logs/                     # search.jsonl event log (not tracked)
+    keyword_search.py         # inverted index, TF-IDF, BM25
+    semantic_search.py        # embeddings, cosine similarity, chunking
+    hybrid_search.py          # normalization, weighted fusion, RRF
+    query_enhancement.py      # LLM query rewriting
+    reranking.py              # LLM and cross-encoder rerankers
+    augmented_generation.py   # RAG prompts and LLM answer generation
+    llm_client.py             # OpenRouter client setup
+    formatting.py             # CLI result formatting
+    search_evaluation.py      # LLM relevance scoring
+    search_logging.py         # JSONL search log writer
+    search_runner.py          # command dispatch, enhance/search/rerank pipeline with logging
+    search_utils.py           # paths, defaults, and shared types
+data/                         # movies.json + stopwords.txt (not tracked)
+cache/                        # generated indexes and embeddings (not tracked)
+logs/                         # search.jsonl event log (not tracked)
 ```
