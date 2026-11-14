@@ -86,7 +86,7 @@ def format_relevance_report(
     )
 
 
-def format_rag_response(
+def format_LLM_answer(
     results: Sequence[Mapping[str, Any]],
     answer: str,
 ) -> str:
@@ -94,5 +94,5 @@ def format_rag_response(
     return f"""Search Results:
 {search_results}
 
-RAG Response:
+LLM Response:
 {answer}"""

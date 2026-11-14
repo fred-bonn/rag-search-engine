@@ -1,11 +1,12 @@
 import argparse
 
 from lib.augmented_generation import (
+    generate_citations_response,
     generate_rag_response,
     generate_summarize_response,
 )
 from lib.formatting import (
-    format_rag_response,
+    format_LLM_answer,
 )
 from lib.search_utils import (
     DEFAULT_RRF_K,
@@ -30,6 +31,12 @@ def main() -> None:
     summarize_parser.add_argument("query", type=str, help="Search query for summarize")
     summarize_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
 
+    citations_parser = subparsers.add_parser(
+        "citations", help="Answer a search query with cited sources"
+    )
+    citations_parser.add_argument("query", type=str, help="Search query for citations")
+    citations_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Maximum number of results")
+
     args = parser.parse_args()
 
     match args.command:
@@ -41,7 +48,7 @@ def main() -> None:
                 command_kwargs={"k": DEFAULT_RRF_K},
             )
             answer = generate_rag_response(args.query, results)
-            print(format_rag_response(results, answer))
+            print(format_LLM_answer(results, answer))
         case "summarize":
             results = run_search_pipeline(
                 "rrf",
@@ -50,7 +57,16 @@ def main() -> None:
                 command_kwargs={"k": DEFAULT_RRF_K},
             )
             answer = generate_summarize_response(args.query, results)
-            print(format_rag_response(results, answer))
+            print(format_LLM_answer(results, answer))
+        case "citations":
+            results = run_search_pipeline(
+                "rrf",
+                query=args.query,
+                limit=args.limit,
+                command_kwargs={"k": DEFAULT_RRF_K},
+            )
+            answer = generate_citations_response(args.query, results)
+            print(format_LLM_answer(results, answer))
         case _:
             parser.print_help()
 
