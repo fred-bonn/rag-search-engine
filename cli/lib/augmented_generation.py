@@ -1,4 +1,4 @@
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from .query_enhancement import (
@@ -24,22 +24,6 @@ Documents:
 Answer:"""
 
 
-def generate_rag_response(query: str, results: Sequence[Mapping[str, Any]]) -> str:
-    response = get_client().chat.completions.create(
-        model=MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": rag_prompt(query, results),
-            }
-        ],
-    )
-    answer = response.choices[0].message.content
-    if answer is None:
-        raise RuntimeError("LLM returned an empty response")
-    return answer.strip()
-
-
 def summarize_prompt(query: str, results: Sequence[Mapping[str, Any]]) -> str:
     docs = "\n".join(
         f"{rank}. {result['title']}: {result['document']}"
@@ -58,22 +42,6 @@ Search results:
 {docs}
 
 Provide a comprehensive 3–4 sentence answer that combines information from multiple sources:"""
-
-
-def generate_summarize_response(query: str, results: Sequence[Mapping[str, Any]]) -> str:
-    response = get_client().chat.completions.create(
-        model=MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": summarize_prompt(query, results),
-            }
-        ],
-    )
-    answer = response.choices[0].message.content
-    if answer is None:
-        raise RuntimeError("LLM returned an empty response")
-    return answer.strip()
 
 
 def citations_prompt(query: str, results: Sequence[Mapping[str, Any]]) -> str:
@@ -101,22 +69,6 @@ Instructions:
 Answer:"""
 
 
-def generate_citations_response(query: str, results: Sequence[Mapping[str, Any]]) -> str:
-    response = get_client().chat.completions.create(
-        model=MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": citations_prompt(query, results),
-            }
-        ],
-    )
-    answer = response.choices[0].message.content
-    if answer is None:
-        raise RuntimeError("LLM returned an empty response")
-    return answer.strip()
-
-
 def question_prompt(question: str, results: Sequence[Mapping[str, Any]]) -> str:
     docs = "\n".join(
         f"{rank}. {result['title']}: {result['document']}"
@@ -138,13 +90,27 @@ Instructions:
 Answer:"""
 
 
-def generate_question_response(question: str, results: Sequence[Mapping[str, Any]]) -> str:
+ResponsePrompt = Callable[[str, Sequence[Mapping[str, Any]]], str]
+
+PROMPTS: dict[str, ResponsePrompt] = {
+    "rag": rag_prompt,
+    "summarize": summarize_prompt,
+    "citations": citations_prompt,
+    "question": question_prompt,
+}
+
+
+def generate_response(
+    query: str,
+    results: Sequence[Mapping[str, Any]],
+    prompt_type: str,
+) -> str:
     response = get_client().chat.completions.create(
         model=MODEL,
         messages=[
             {
                 "role": "user",
-                "content": question_prompt(question, results),
+                "content": PROMPTS[prompt_type](query, results),
             }
         ],
     )

@@ -1,10 +1,7 @@
 import argparse
 
 from lib.augmented_generation import (
-    generate_citations_response,
-    generate_question_response,
-    generate_rag_response,
-    generate_summarize_response,
+    generate_response,
 )
 from lib.formatting import (
     format_LLM_answer,
@@ -54,7 +51,7 @@ def main() -> None:
                 limit=DEFAULT_SEARCH_LIMIT,
                 command_kwargs={"k": DEFAULT_RRF_K},
             )
-            answer = generate_rag_response(args.query, results)
+            answer = generate_response(args.query, results, "rag")
             print(format_LLM_answer(results, answer))
         case "summarize":
             results = run_search_pipeline(
@@ -63,7 +60,7 @@ def main() -> None:
                 limit=args.limit,
                 command_kwargs={"k": DEFAULT_RRF_K},
             )
-            answer = generate_summarize_response(args.query, results)
+            answer = generate_response(args.query, results, "summarize")
             print(format_LLM_answer(results, answer))
         case "citations":
             results = run_search_pipeline(
@@ -72,7 +69,7 @@ def main() -> None:
                 limit=args.limit,
                 command_kwargs={"k": DEFAULT_RRF_K},
             )
-            answer = generate_citations_response(args.query, results)
+            answer = generate_response(args.query, results, "citations")
             print(format_LLM_answer(results, answer))
         case "question":
             results = run_search_pipeline(
@@ -81,7 +78,7 @@ def main() -> None:
                 limit=args.limit,
                 command_kwargs={"k": DEFAULT_RRF_K},
             )
-            answer = generate_question_response(args.question, results)
+            answer = generate_response(args.question, results, "question")
             print(format_LLM_answer(results, answer))
         case _:
             parser.print_help()
