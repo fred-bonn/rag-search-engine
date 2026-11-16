@@ -1,4 +1,5 @@
-- Never run the "build" CLI command
+- Never run the "build" Keyword Search CLI command
+- Don't add validation, guards, or capability flags beyond what was explicitly requested; prefer the simplest wiring that satisfies the request.
 
 ## Commits
 
