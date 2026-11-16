@@ -3,6 +3,7 @@ from typing import Any
 
 from .search_utils import (
     HybridSearchResult,
+    ImageSearchResult,
     KeywordSearchResult,
     RRFSearchResult,
     ScoredSearchResult,
@@ -73,6 +74,14 @@ def format_rrf_result(result: RRFSearchResult, rank: int) -> str:
             f"   {_truncate_document(result['document'])}",
         ]
     )
+    return "\n".join(lines)
+
+
+def format_image_result(result: ImageSearchResult, rank: int) -> str:
+    lines = [
+        f"{rank}. {result['title']} (similarity: {result['score']:.3f})",
+        f"   {_truncate_document(result['document'])}",
+    ]
     return "\n".join(lines)
 
 

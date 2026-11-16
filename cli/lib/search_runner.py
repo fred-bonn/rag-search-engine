@@ -9,6 +9,7 @@ from .keyword_search import (
     bm25_search_command,
     search_command,
 )
+from .multimodal_search import image_search
 from .query_enhancement import enhance_query
 from .reranking import RERANKERS
 from .search_logging import (
@@ -31,6 +32,7 @@ SearchCommand = Literal[
     "semantic_chunked",
     "weighted",
     "rrf",
+    "image",
 ]
 
 
@@ -47,6 +49,7 @@ SEARCH_COMMANDS: dict[SearchCommand, SearchCommandSpec] = {
     "semantic_chunked": SearchCommandSpec("semantic", "chunked_search", search_chunked_command),
     "weighted": SearchCommandSpec("hybrid", "weighted_search", weighted_search_command),
     "rrf": SearchCommandSpec("hybrid", "rrf_search", rrf_search_command),
+    "image": SearchCommandSpec("multimodal", "image_search", image_search),
 }
 
 

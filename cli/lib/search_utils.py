@@ -80,6 +80,12 @@ class RRFSearchResult(TypedDict):
     rerank_score: NotRequired[int | None]
     cross_encoder_score: NotRequired[float | None]
 
+class ImageSearchResult(TypedDict):
+    id: int
+    title: str
+    document: str
+    score: float
+
 class TestCase(TypedDict):
     query: str
     relevant_docs: list[str]
